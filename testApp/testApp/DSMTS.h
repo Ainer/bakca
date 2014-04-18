@@ -37,8 +37,10 @@ private slots:
 private:
     QUdpSocket *udpSocket;
     QHostAddress groupAddress;
-    QVector<AgentInfo> agents;
-    QList<AgentInfo> PlatformAgents;
+    QList<int> PlatformAgents;
+    Qlist<int> RemoteAgents;
+    Qlist<int> LocalAgents;
+    QList<AgentInfo> Agents;
 };
 
 #endif // DSMTS_H
