@@ -10,7 +10,7 @@ QT       += core network widgets
 QT       -= gui
 
 TARGET = testApp
-CONFIG   += console
+CONFIG   += console C++11 TUFAO1
 CONFIG   -= app_bundle
 
 TEMPLATE = app
