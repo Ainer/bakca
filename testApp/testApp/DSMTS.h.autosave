@@ -78,7 +78,7 @@ public:
     bool ParseUrlPacket(const char* msg);
     bool ParseNotifyPacket(const char* msg);
     void SendMulticastNotifyPacket();
-    QMap<QString, QString>& getUrlFromName(QStringList names);
+    QMap<QString, QString> getUrlFromName(QStringList names);
     QString getUrlFromName(QString name);
 
 private slots:

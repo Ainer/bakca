@@ -12,13 +12,13 @@ MAKEFILE      = Makefile
 
 CC            = gcc
 CXX           = g++
-DEFINES       = -DTUFAO_VERSION_MAJOR=1 -DQT_QML_DEBUG -DQT_DECLARATIVE_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
+DEFINES       = -DTUFAO_VERSION_MAJOR=1 -DQT_QML_DEBUG -DQT_DECLARATIVE_DEBUG -DQT_WIDGETS_LIB -DQT_XML_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
 CFLAGS        = -m64 -pipe -g -Wall -W -D_REENTRANT -fPIE $(DEFINES)
 CXXFLAGS      = -m64 -pipe -g -std=c++0x -Wall -W -D_REENTRANT -fPIE $(DEFINES)
-INCPATH       = -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I../testApp -I/usr/include/tufao-1 -I/usr/include/qt5 -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtNetwork -I/usr/include/qt5/QtCore -I. -I.
+INCPATH       = -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I../testApp -I/usr/include/tufao-1 -I/usr/include/qt5 -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtXml -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtNetwork -I/usr/include/qt5/QtCore -I. -I.
 LINK          = g++
 LFLAGS        = -m64
-LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -L/usr/lib -ltufao1 -lQt5Widgets -L/usr/lib/x86_64-linux-gnu -lQt5Gui -lQt5Network -lQt5Core -lGL -lpthread 
+LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -L/usr/lib -ltufao1 -lQt5Widgets -L/usr/lib/x86_64-linux-gnu -lQt5Xml -lQt5Gui -lQt5Network -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 
 QMAKE         = /usr/lib/x86_64-linux-gnu/qt5/bin/qmake
@@ -215,6 +215,7 @@ Makefile: ../testApp/testApp.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
 		/usr/lib/x86_64-linux-gnu/libQt5Widgets.prl \
 		/usr/lib/x86_64-linux-gnu/libQt5Gui.prl \
 		/usr/lib/x86_64-linux-gnu/libQt5Core.prl \
+		/usr/lib/x86_64-linux-gnu/libQt5Xml.prl \
 		/usr/lib/x86_64-linux-gnu/libQt5Network.prl
 	$(QMAKE) -spec linux-g++-64 CONFIG+=debug CONFIG+=declarative_debug CONFIG+=qml_debug -o Makefile ../testApp/testApp.pro
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf:
@@ -284,6 +285,7 @@ Makefile: ../testApp/testApp.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
 /usr/lib/x86_64-linux-gnu/libQt5Widgets.prl:
 /usr/lib/x86_64-linux-gnu/libQt5Gui.prl:
 /usr/lib/x86_64-linux-gnu/libQt5Core.prl:
+/usr/lib/x86_64-linux-gnu/libQt5Xml.prl:
 /usr/lib/x86_64-linux-gnu/libQt5Network.prl:
 qmake: FORCE
 	@$(QMAKE) -spec linux-g++-64 CONFIG+=debug CONFIG+=declarative_debug CONFIG+=qml_debug -o Makefile ../testApp/testApp.pro
@@ -582,6 +584,18 @@ moc_DSMTS.cpp: /usr/include/qt5/QtNetwork/QtNetwork \
 		/usr/include/qt5/QtGui/qevent.h \
 		/usr/include/qt5/QtGui/qvector2d.h \
 		/usr/include/qt5/QtGui/qtouchdevice.h \
+		/usr/include/tufao-1/Tufao/HttpServer \
+		/usr/include/tufao-1/Tufao/httpserver.h \
+		/usr/include/qt5/QtNetwork/QTcpServer \
+		/usr/include/tufao-1/Tufao/tufao_global.h \
+		/usr/include/tufao-1/Tufao/httpconnectionhandler.h \
+		/usr/include/tufao-1/Tufao/abstractconnectionhandler.h \
+		/usr/include/tufao-1/Tufao/HttpServerRequest \
+		/usr/include/tufao-1/Tufao/httpserverrequest.h \
+		/usr/include/tufao-1/Tufao/httpserverresponse.h \
+		/usr/include/tufao-1/Tufao/HttpServerResponse \
+		/usr/include/tufao-1/Tufao/AbstractHttpServerRequestHandler \
+		/usr/include/tufao-1/Tufao/abstracthttpserverrequesthandler.h \
 		../testApp/DSMTS.h
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) $(INCPATH) -I/usr/include/c++/4.8 -I/usr/include/x86_64-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../testApp/DSMTS.h -o moc_DSMTS.cpp
 
@@ -685,6 +699,21 @@ main.o: ../testApp/main.cpp /usr/include/qt5/QtCore/QCoreApplication \
 		/usr/include/tufao-1/Tufao/httpconnectionhandler.h \
 		/usr/include/tufao-1/Tufao/abstractconnectionhandler.h \
 		/usr/include/qt5/QtCore/QObject \
+		/usr/include/qt5/QtCore/QUrl \
+		/usr/include/qt5/QtCore/qurl.h \
+		/usr/include/qt5/QtCore/qurlquery.h \
+		/usr/include/tufao-1/Tufao/HttpServerRequest \
+		/usr/include/tufao-1/Tufao/httpserverrequest.h \
+		/usr/include/tufao-1/Tufao/httpserverresponse.h \
+		/usr/include/tufao-1/Tufao/Headers \
+		/usr/include/tufao-1/Tufao/headers.h \
+		/usr/include/qt5/QtCore/QMultiHash \
+		/usr/include/qt5/QtCore/QDateTime \
+		/usr/include/qt5/QtCore/qdatetime.h \
+		/usr/include/qt5/QtCore/qsharedpointer.h \
+		/usr/include/qt5/QtCore/qsharedpointer_impl.h \
+		/usr/include/tufao-1/Tufao/ibytearray.h \
+		/usr/include/qt5/QtCore/QByteArray \
 		../testApp/DSMTS.h \
 		/usr/include/qt5/QtNetwork/QtNetwork \
 		/usr/include/qt5/QtNetwork/QtNetworkDepends \
@@ -701,9 +730,6 @@ main.o: ../testApp/main.cpp /usr/include/qt5/QtCore/QCoreApplication \
 		/usr/include/qt5/QtCore/qtextcodec.h \
 		/usr/include/qt5/QtCore/qendian.h \
 		/usr/include/qt5/QtCore/qlibraryinfo.h \
-		/usr/include/qt5/QtCore/qdatetime.h \
-		/usr/include/qt5/QtCore/qsharedpointer.h \
-		/usr/include/qt5/QtCore/qsharedpointer_impl.h \
 		/usr/include/qt5/QtCore/qnumeric.h \
 		/usr/include/qt5/QtCore/qbuffer.h \
 		/usr/include/qt5/QtCore/qdir.h \
@@ -724,8 +750,6 @@ main.o: ../testApp/main.cpp /usr/include/qt5/QtCore/QCoreApplication \
 		/usr/include/qt5/QtCore/qtemporarydir.h \
 		/usr/include/qt5/QtCore/QScopedPointer \
 		/usr/include/qt5/QtCore/qtemporaryfile.h \
-		/usr/include/qt5/QtCore/qurl.h \
-		/usr/include/qt5/QtCore/qurlquery.h \
 		/usr/include/qt5/QtCore/qabstractitemmodel.h \
 		/usr/include/qt5/QtCore/qabstractproxymodel.h \
 		/usr/include/qt5/QtCore/qidentityproxymodel.h \
@@ -808,10 +832,8 @@ main.o: ../testApp/main.cpp /usr/include/qt5/QtCore/QCoreApplication \
 		/usr/include/qt5/QtNetwork/qnetworkrequest.h \
 		/usr/include/qt5/QtCore/QSharedDataPointer \
 		/usr/include/qt5/QtCore/QString \
-		/usr/include/qt5/QtCore/QUrl \
 		/usr/include/qt5/QtCore/QVariant \
 		/usr/include/qt5/QtNetwork/qhttpmultipart.h \
-		/usr/include/qt5/QtCore/QByteArray \
 		/usr/include/qt5/QtCore/QIODevice \
 		/usr/include/qt5/QtNetwork/QNetworkRequest \
 		/usr/include/qt5/QtNetwork/qnetworkaccessmanager.h \
@@ -870,7 +892,10 @@ main.o: ../testApp/main.cpp /usr/include/qt5/QtCore/QCoreApplication \
 		/usr/include/qt5/QtGui/qkeysequence.h \
 		/usr/include/qt5/QtGui/qevent.h \
 		/usr/include/qt5/QtGui/qvector2d.h \
-		/usr/include/qt5/QtGui/qtouchdevice.h
+		/usr/include/qt5/QtGui/qtouchdevice.h \
+		/usr/include/tufao-1/Tufao/HttpServerResponse \
+		/usr/include/tufao-1/Tufao/AbstractHttpServerRequestHandler \
+		/usr/include/tufao-1/Tufao/abstracthttpserverrequesthandler.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../testApp/main.cpp
 
 DSMTS.o: ../testApp/DSMTS.cpp /usr/include/qt5/QtNetwork/QtNetwork \
@@ -1111,6 +1136,15 @@ DSMTS.o: ../testApp/DSMTS.cpp /usr/include/qt5/QtNetwork/QtNetwork \
 		/usr/include/qt5/QtNetwork/qsslcipher.h \
 		/usr/include/qt5/QtNetwork/qsslkey.h \
 		/usr/include/qt5/QtNetwork/qtnetworkversion.h \
+		/usr/include/tufao-1/Tufao/Headers \
+		/usr/include/tufao-1/Tufao/headers.h \
+		/usr/include/qt5/QtCore/QMultiHash \
+		/usr/include/qt5/QtCore/QDateTime \
+		/usr/include/tufao-1/Tufao/ibytearray.h \
+		/usr/include/tufao-1/Tufao/tufao_global.h \
+		/usr/include/qt5/QtXml/QDomDocument \
+		/usr/include/qt5/QtXml/qdom.h \
+		/usr/include/qt5/QtXml/qtxmlglobal.h \
 		../testApp/DSMTS.h \
 		/usr/include/qt5/QtWidgets/QDialog \
 		/usr/include/qt5/QtWidgets/qdialog.h \
@@ -1137,7 +1171,18 @@ DSMTS.o: ../testApp/DSMTS.cpp /usr/include/qt5/QtNetwork/QtNetwork \
 		/usr/include/qt5/QtGui/qkeysequence.h \
 		/usr/include/qt5/QtGui/qevent.h \
 		/usr/include/qt5/QtGui/qvector2d.h \
-		/usr/include/qt5/QtGui/qtouchdevice.h
+		/usr/include/qt5/QtGui/qtouchdevice.h \
+		/usr/include/tufao-1/Tufao/HttpServer \
+		/usr/include/tufao-1/Tufao/httpserver.h \
+		/usr/include/qt5/QtNetwork/QTcpServer \
+		/usr/include/tufao-1/Tufao/httpconnectionhandler.h \
+		/usr/include/tufao-1/Tufao/abstractconnectionhandler.h \
+		/usr/include/tufao-1/Tufao/HttpServerRequest \
+		/usr/include/tufao-1/Tufao/httpserverrequest.h \
+		/usr/include/tufao-1/Tufao/httpserverresponse.h \
+		/usr/include/tufao-1/Tufao/HttpServerResponse \
+		/usr/include/tufao-1/Tufao/AbstractHttpServerRequestHandler \
+		/usr/include/tufao-1/Tufao/abstracthttpserverrequesthandler.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o DSMTS.o ../testApp/DSMTS.cpp
 
 moc_DSMTS.o: moc_DSMTS.cpp 
