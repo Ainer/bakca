@@ -14,34 +14,36 @@ int main(int argc, char *argv[])
     QMap<QString, QString> map;
     Platform platform;
 
-    platform.DS.SendMulticastNotifyPacket();
+    platform.ds.sendMulticastNotifyPacket();
 
     AgentInfo ahoj;
 
     ahoj.desription.name = "filip";
-    ahoj.desription.flags << "nie" << "ano" << "neger";
+    ahoj.desription.flags << "nie" << "ano" << "nie";
     ahoj.desription.services << "0" << "1" << "1";
     ahoj.address.url = "http://niekto.sk";
-    ahoj.address.metric = 2;
+    ahoj.address.properties.metric = 2;
 
     QList<AgentInfo> agents;
     agents.append(ahoj);
 
     ahoj.desription.name = "magda";
-    ahoj.desription.flags << "nie" << "ano" << "neger";
+    ahoj.desription.flags << "nie" << "ano" << "ano";
     ahoj.desription.services << "1" << "1" << "1";
-    ahoj.address.url = "http://158.195.212.98:8080/AgentNotify";
-    ahoj.address.metric = 5;
+    ahoj.address.url = "http://158.195.212.98";
+    ahoj.address.properties.metric = 5;
 
     agents.append(ahoj);
 
 
 
 
-    map.insert("milos", "http://ahoj.sk/notify");
-    map.insert("marek", "http://ahoj.sk/notify");
-    map.insert("maros", "http://158.195.212.98:8080/AgentNotify");
-    platform.MTS.writeHttpNotifyMessage(agents, map, "Adko");
+    map.insert("milos", "http://ahoj.sk");
+    map.insert("marek", "http://nie.sk");
+    map.insert("maros", "http://158.195.212.98:22222");
+
+    platform.mts.writeHttpNotify(agents, map, "Adko");
+    //platform.mts.writeHttpMessage(map, "Adko", "Niggermaniak Marian");
 
     return a.exec();
 }

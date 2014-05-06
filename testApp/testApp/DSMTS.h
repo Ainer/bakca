@@ -9,10 +9,20 @@
 #include <Tufao/AbstractHttpServerRequestHandler>
 #include <QNetworkReply>
 
+
+
+struct TransportAddressProperties {
+    int metric;
+    QTime timestamp;
+};
+
+
 struct TransportAddress {
     QString url;
-    int metric;
+    TransportAddressProperties properties;
+
 };
+
 
 struct AgentDescription {
     QString name;
@@ -75,11 +85,10 @@ class DiscoveryService: public QObject
     Q_OBJECT
 public:
     DiscoveryService(QObject *parent = 0);
-    bool ParseUrlPacket(const char* msg);
-    bool ParseNotifyPacket(const char* msg);
-    void SendMulticastNotifyPacket();
-    QMap<QString, QString>& getUrlFromName(QStringList names);
-    QString getUrlFromName(QString name);
+    bool parseUrlPacket(const QByteArray msg);
+    bool parseNotifyPacket(const char* msg);
+    void sendMulticastNotifyPacket();
+    QList<AgentInfo> platformAgents;
 
 private slots:
     void processPendingDatagrams();
@@ -87,38 +96,31 @@ private slots:
 private:
     QUdpSocket *udpSocket;
     QHostAddress groupAddress;
-    QList<int> PlatformAgents;
-    QList<int> RemoteAgents;
-    QList<int> LocalAgents;
-    QList<AgentInfo> Agents;
+
+    QList<AgentInfo> forwardedAgents;
 };
 
-/////fill Qlists with indexes
 
-
-class MessageTransportService: public QObject, public Tufao::AbstractHttpServerRequestHandler
+class MessageTransportService: public QObject
 {
     Q_OBJECT
 public:
     Tufao::HttpServer server;
+    QNetworkAccessManager *manager;
     //TcpClient tcpClient;
     //TcpServer tcpServer;
     MessageTransportService(QObject *parent = 0);
-    void writeHttpNotifyMessage(const QList<AgentInfo> agentsToBeNotified, const QMap<QString, QString> recipients, const QString sender);
-    void sendMessage(const QMap<QString, QString> recipients, const QByteArray msg, const QString sender);
-    void sendHttpNotify(const QByteArray msg, const QString targetAgent);
+    void writeHttpNotify(const QList<AgentInfo> agentsToBeNotified , const QMap<QString, QString> recipients, const QString sender);
+    void writeHttpMessage(const QMap<QString, QString> recipients, const QString sender, QByteArray msg);
+    void sendHttp(const QByteArray msg, const QString targetAgent, bool notify);
     QMap<QString, AgentInfo> processHttpNotify(QByteArray data);
 
-public slots:
-    bool handleRequest(Tufao::HttpServerRequest &request,
-                       Tufao::HttpServerResponse &response) override;
-    void httpNotifyReadyRead();
-    void httpMessageReadyRead();
 
-private:
-    QNetworkReply *reply;
+public slots:
+    void handleRequest(Tufao::HttpServerRequest &request,
+                       Tufao::HttpServerResponse &response);
 signals:
-    void httpNotifyReceived(QByteArray data);
+    void httpNotifyReceived(QMap<QString,AgentInfo>);
 
 
 };
@@ -127,8 +129,8 @@ class Platform: public QObject
 {
     Q_OBJECT
 public:
-    MessageTransportService MTS;
-    DiscoveryService DS;
+    MessageTransportService mts;
+    DiscoveryService ds;
     Platform(QObject *parent = 0);
 
 public slots:
