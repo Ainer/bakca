@@ -26,8 +26,7 @@ int main(int argc, char *argv[])
 
     props.metric = 3;
     props.timestamp = QTime::currentTime().addSecs(10);
-    ahoj.transportAddresses["127.0.0.1:22222"] = QVariant(3);
-    ahoj.timeStamp = QTime::currentTime().addSecs(10);
+    ahoj.transportAddresses["127.0.0.1:22222"] = props;
 
     ahoj.transportAddresses.clear();
 
@@ -36,11 +35,13 @@ int main(int argc, char *argv[])
     agents.insert(ahoj.desription.name,ahoj);
     toBeNotified.append(ahoj);
 
+    props.metric = 5;
+    props.timestamp = QTime::currentTime().addSecs(11);
+
     ahoj.desription.name = "magda";
     ahoj.desription.flags << "GW" << "ano" << "ano";
     ahoj.desription.services << "1" << "1" << "1";
-    ahoj.transportAddresses[QString("128.0.0.1:22452")] = QVariant(4);
-    ahoj.timeStamp = QTime::currentTime().addSecs(20);
+    ahoj.transportAddresses[QString("128.0.0.1:22452")] = props;
 
     agents.insert(ahoj.desription.name,ahoj);
     toBeNotified.append(ahoj);
@@ -55,32 +56,36 @@ int main(int argc, char *argv[])
     hash.insert("jaroslav", "http://127.0.0.1:22222");
     hash.insert("filip", "http://127.0.0.1:22222");
 
-    //platform.mts.writeHttpNotify(toBeNotified, hash, "Adko");
-    platform.mts.writeHttpMessage(hash, "Adko", "Toto je message");
+    platform.mts.writeHttpNotify(toBeNotified, hash, "Adko");
+    //platform.mts.writeHttpMessage(hash, "Adko", "Toto je message");
 
-    platform.ds.platformAgents = agents;
+    platform.ds.setPlatformAgents(agents);
     platform.platformAgents = agents;
 
     agents.clear();
     ahoj.transportAddresses.clear();
 
+    props.metric = 2;
+    props.timestamp = QTime::currentTime().addSecs(15);
+
     ahoj.desription.name = "roman";
     ahoj.desription.flags << "GW" << "ano" << "ano";
     ahoj.desription.services << "1" << "1" << "1";
-    ahoj.transportAddresses[QString("http://ahoj.sk")] = QVariant(4);
-    ahoj.timeStamp = QTime::currentTime().addSecs(5);
+    ahoj.transportAddresses[QString("http://ahoj.sk")] = props;
     agents.insert(ahoj.desription.name, ahoj);
 
     ahoj.transportAddresses.clear();
 
+    props.metric = 4;
+    props.timestamp = QTime::currentTime().addSecs(22);
+
     ahoj.desription.name = "jaroslav";
     ahoj.desription.flags << "GW" << "ano" << "ano";
     ahoj.desription.services << "1" << "1" << "1";
-    ahoj.transportAddresses[QString("http://nie.sk")] = QVariant(4);
-    ahoj.timeStamp = QTime::currentTime().addSecs(9);
+    ahoj.transportAddresses[QString("http://nie.sk")] = props;
     agents.insert(ahoj.desription.name, ahoj);
 
-    platform.remoteAgents = agents;
+    //platform.forwardedAgents = agents;
 
     return a.exec();
 }

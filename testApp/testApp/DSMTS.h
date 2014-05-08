@@ -11,6 +11,13 @@
 
 
 
+enum MessageType{
+    Notify, StandardMessage, Bye
+};
+const QStringList MESSAGE_TYPE_STRINGS = {"notify", "standardMessage", "Bye"};
+
+
+
 struct TransportAddressProperties {
 public:
     int metric;
@@ -18,11 +25,11 @@ public:
 };
 Q_DECLARE_METATYPE(TransportAddressProperties)
 
-
+/*
 struct TransportAddress{
     QString url;
 };
-
+*/
 
 struct AgentDescription {
     QString name;
@@ -33,8 +40,7 @@ struct AgentDescription {
 
 class AgentInfo{
 public:
-    QTime timeStamp;
-    QVariantMap transportAddresses;
+    QHash<QString, TransportAddressProperties> transportAddresses;
     AgentDescription desription;
     bool operator==(const AgentInfo &ai) const {
         return this->desription.name == ai.desription.name; //name should be unique, thus comparting two agents based on name
@@ -88,52 +94,62 @@ private:
 class DiscoveryService: public QObject
 {
     Q_OBJECT
-public:
-    DiscoveryService(QObject *parent = 0);
-    bool parseUrlPacket(const QByteArray msg);
-    bool parseNotifyPacket(QByteArray msg);
-    void sendMulticastNotifyPacket();
-    QHash<QString, AgentInfo> platformAgents;
-
-private slots:
-    void processPendingDatagrams();
 
 private:
     QUdpSocket *udpSocket;
     QHostAddress groupAddress;
-
     QHash<QString, AgentInfo> forwardedAgents;
+    QHash<QString, AgentInfo> platformAgents;
+    void updateAgents(QHash<QString, AgentInfo> newAgents);
+public:
+    DiscoveryService(QObject *parent = 0);
+
+    void setPlatformAgents(QHash<QString, AgentInfo> agents){platformAgents = agents;}
+
+    bool parseUrlPacket(const QByteArray msg);
+    bool parseNotifyPacket(QByteArray msg);
+    void sendMulticastNotifyPacket();
+
+signals:
+    void forwardedAgentsUpdated(QHash<QString, AgentInfo>);
+
+private slots:
+    void processPendingDatagrams();
+
+public slots:
+    void processXmlNotify(QByteArray data);
+
+
 };
 
 
 class MessageTransportService: public QObject
 {
     Q_OBJECT
-public:
-    //TcpClient tcpClient;
-    //TcpServer tcpServer;
-    QHash<QString, AgentInfo> platformAgents;
-    QHash<QString, AgentInfo> remoteAgents;
-    MessageTransportService(QObject *parent = 0);
-    void writeHttpNotify(const QList<AgentInfo> agentsToBeNotified , const QHash<QString, QString> recipients, const QString sender);
-    void writeHttpMessage(const QHash<QString, QString> recipients, const QString sender, QByteArray msg);
-
-private slots:
-    void handleRequest(Tufao::HttpServerRequest &request,
-                       Tufao::HttpServerResponse &response);
-signals:
-    void httpNotifyReceived(QMap<QString,AgentInfo>);
-    void httpMessageReceived(QByteArray);
-    void needAgentList();
-    void messageReady(QStringList, QByteArray);
 
 private:
     Tufao::HttpServer server;
     QNetworkAccessManager *manager;
-    void sendHttp(const QByteArray msg, const QString targetAgent, bool notify);
-    QMap<QString, AgentInfo> processHttpNotify(QByteArray data);
+    void sendHttp(const QByteArray msg, const QString targetAgent, MessageType type);
     void processHttpMessage(QByteArray data);
 
+public:
+    //TcpClient tcpClient;
+    //TcpServer tcpServer;
+    QHash<QString, AgentInfo> platformAgents;
+    QHash<QString, AgentInfo> forwardedAgents;
+    MessageTransportService(QObject *parent = 0);
+    void writeHttpNotify(const QList<AgentInfo> agentsToBeNotified , const QHash<QString, QString> recipients, const QString sender);
+    void writeHttpMessage(const QHash<QString, QString> recipients, const QString sender, QByteArray msg, MessageType type);
+
+private slots:
+    void handleRequest(Tufao::HttpServerRequest &request,
+                       Tufao::HttpServerResponse &response);
+
+signals:
+    void needAgentList();
+    void messageReady(QStringList, QByteArray);
+    void notifyMessageReady(QByteArray);
 
 };
 
@@ -145,14 +161,12 @@ public:
     DiscoveryService ds;
     Platform(QObject *parent = 0);
     QHash<QString, AgentInfo> platformAgents;
-    QHash<QString, AgentInfo> remoteAgents;
+    QHash<QString, AgentInfo> forwardedAgents;
 
-public slots:
-    void forwardHttpNotifyToDs(QMap<QString, AgentInfo> agents);
-    void handleHttpMessage(QByteArray msg);
+private slots:
+    void updateforwardedAgents(QHash<QString, AgentInfo> agents){forwardedAgents = agents;}
     void sendAgentListToMts();
     void handleAgentMessage(QStringList recipients, QByteArray msg);
-private:
 
 };
 
