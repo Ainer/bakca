@@ -15,6 +15,7 @@ const int MULTICAST_PORT = 45454;
 const QString NAME = "name";
 const QString SERVICES = "services";
 const QString FLAGS = "flags";
+const QString TRANSPORT_ADDRESSES = "transportAddresses";
 const QString URL = "url";
 const QString METRIC = "metric";
 const QString TIMESTAMP = "timestamp";
@@ -34,7 +35,7 @@ DiscoveryService::DiscoveryService(QObject *parent) : QObject(parent)
     connect(udpSocket, SIGNAL(readyRead()),
             this, SLOT(processPendingDatagrams()));
 
-    sendMulticastNotifyPacket();
+    //sendMulticastNotifyPacket();
 }
 
 void DiscoveryService::processPendingDatagrams()
@@ -66,29 +67,24 @@ bool DiscoveryService::parseUrlPacket(const QByteArray msg)
     return true;
 }
 
-bool DiscoveryService::parseNotifyPacket(const char *msg) // TODO CHANGE TO LIST
+bool DiscoveryService::parseNotifyPacket(QByteArray msg) // TODO CHANGE TO LIST
 {
     AgentInfo ai;
     // qDebug(msg);
-    QJsonDocument doc = QJsonDocument::fromJson(msg);
+    QJsonDocument doc = QJsonDocument::fromBinaryData(msg);
     QVariantMap message = doc.object().toVariantMap();
     QVariantMap::const_iterator it = message.constBegin();
     while(it != message.constEnd()){
-        QVariantMap aiHash = it.value().toMap();
-        ai.desription.name = aiHash[NAME].toString();
-        ai.desription.services = aiHash[SERVICES].toStringList();
-        ai.desription.flags = aiHash[FLAGS].toStringList();
-        ai.address.url = aiHash[URL].toString();
-        ai.address.properties.metric = aiHash[METRIC].toInt();
-        ai.address.properties.timestamp = aiHash[METRIC].toTime();
-        if (forwardedAgents.indexOf(ai) < 0)
-            forwardedAgents.append(ai);
-        else
-            forwardedAgents[forwardedAgents.indexOf(ai)] = ai;
+        QVariantMap aiMap = it.value().toMap();
+        ai.desription.name = aiMap[NAME].toString();
+        ai.desription.services = aiMap[SERVICES].toStringList();
+        ai.desription.flags = aiMap[FLAGS].toStringList();
+        ai.transportAddresses = aiMap[TRANSPORT_ADDRESSES].toMap();
+        ai.timeStamp = aiMap[TIMESTAMP].toTime();
         ++it;
+
+
     }
-
-
     return true;
 }
 
@@ -97,32 +93,37 @@ void DiscoveryService::sendMulticastNotifyPacket()  // TODO CHANGE TO LIST
     QVariantMap agentInfo;
     QVariantMap agent;
 
-    //const namiesto name, services...
+    QHash<QString, AgentInfo>::const_iterator it;
 
-
-    for (int i = 0; i < platformAgents.length(); ++i){
-        agent[NAME] = QVariant(platformAgents[i].desription.name);
-        agent[SERVICES] = QVariant(platformAgents[i].desription.services);
-        agent[FLAGS] = QVariant(platformAgents[i].desription.flags);
-        agent[URL] = QVariant(platformAgents[i].address.url);
-        agent[METRIC] = QVariant(platformAgents[i].address.properties.metric+1);
-        agent[TIMESTAMP] = QVariant(platformAgents[i].address.properties.timestamp);
-        agentInfo[platformAgents[i].desription.name] = agent;
+    for (it = platformAgents.constBegin(); it != platformAgents.constEnd(); ++it){
+        agent[NAME] = QVariant(it.value().desription.name);
+        agent[SERVICES] = QVariant(it.value().desription.services);
+        agent[FLAGS] = QVariant(it.value().desription.flags);
+        agent[TRANSPORT_ADDRESSES] =  it.value().transportAddresses;
+        agent[TIMESTAMP] = QVariant(it.value().timeStamp);
+        agentInfo[it.value().desription.name] = agent;
     }
 
-    for (int i = 0; i < forwardedAgents.length(); ++i){
-        agent[NAME] = QVariant(forwardedAgents[i].desription.name);
-        agent[SERVICES] = QVariant(forwardedAgents[i].desription.services);
-        agent[FLAGS] = QVariant(forwardedAgents[i].desription.flags);
-        agent[URL] = QVariant(forwardedAgents[i].address.url);
-        agent[METRIC] = QVariant(forwardedAgents[i].address.properties.metric+1);
-        agentInfo[forwardedAgents[i].desription.name] = agent;
+    // ADD GW INFO && forwardedAgents if GW
+
+    //ALL PLATFORM AGENTS HAVE THE SAME ADDRESS?
+
+    for (it = forwardedAgents.constBegin(); it != forwardedAgents.constEnd(); ++it){
+        agent[NAME] = QVariant(it.value().desription.name);
+        agent[SERVICES] = QVariant(it.value().desription.services);
+        agent[FLAGS] = QVariant(it.value().desription.flags);
+        agent[TRANSPORT_ADDRESSES] = qVariantFromValue(it.value().transportAddresses);
+        agentInfo[it.value().desription.name] = agent;
     }
+
+
+
 
     QJsonDocument doc;
     doc.setObject(QJsonObject::fromVariantMap(agentInfo));
-    //qDebug(doc.toJson());
-    udpSocket->writeDatagram(doc.toJson(), QHostAddress(MULTICAST_ADDRESS), MULTICAST_PORT);
+    //qDebug() << doc.toJson();
+
+    udpSocket->writeDatagram(doc.toBinaryData(), QHostAddress(MULTICAST_ADDRESS), MULTICAST_PORT);
 
 }
 
@@ -132,8 +133,8 @@ MessageTransportService::MessageTransportService(QObject *parent) : QObject(pare
 {
 
     connect(&server, SIGNAL(requestReady(Tufao::HttpServerRequest&,Tufao::HttpServerResponse&)),
-                    this,
-                    SLOT(handleRequest(Tufao::HttpServerRequest&,Tufao::HttpServerResponse&)));
+            this,
+            SLOT(handleRequest(Tufao::HttpServerRequest&,Tufao::HttpServerResponse&)));
 
     //tcpClient.connectToHost(My_ADDRESS, 1024);
 
@@ -143,21 +144,25 @@ MessageTransportService::MessageTransportService(QObject *parent) : QObject(pare
 
 void MessageTransportService::handleRequest(Tufao::HttpServerRequest &request, Tufao::HttpServerResponse &response){
     QMap<QString, AgentInfo> agents;
+    QByteArray data = request.readBody();
+    if (data == "")
+        return;
 
     if (request.url().path().contains("/AgentNotify")){
         response.writeHead(Tufao::HttpResponseStatus::OK);
         response.headers().replace("Content-Type", "text/plain");
         response.end("AgentList Received");
         QMap<QString, AgentInfo>::const_iterator it;
-        agents = processHttpNotify(request.readBody());
+        agents = processHttpNotify(data);
+
         qDebug() << "DOSTAL SOM REQUEST";
-        for (it = agents.constBegin(); it != agents.constEnd(); ++it){
+        /* for (it = agents.constBegin(); it != agents.constEnd(); ++it){
             qDebug() << it.value().desription.name;
             qDebug() << it.value().desription.flags;
             qDebug() << it.value().desription.services;
-            qDebug() << it.value().address.url;
-            qDebug() << it.value().address.properties.metric;
-        }
+        }*/
+
+        //SEND LOCAL NOTIFY AFTER PROCESS
 
 
         emit httpNotifyReceived(agents);
@@ -167,16 +172,20 @@ void MessageTransportService::handleRequest(Tufao::HttpServerRequest &request, T
         response.writeHead(Tufao::HttpResponseStatus::NO_RESPONSE);
         response.headers().replace("Content-Type", "text/plain");
         response.end(":(");
+        processHttpMessage(data);
     }
 
 
 }
 
+//TRY SIGNAL DATA()
+
 void MessageTransportService::writeHttpNotify(const QList<AgentInfo> agentsToBeNotified,
-                                              const QMap<QString, QString> recipients, const QString sender){
-    QMap<QString, QString> rec = recipients;
+                                              const QHash<QString, QString> recipients, const QString sender){
+
+    QHash<QString, QString> rec = recipients;
+    QHash<QString, QString>::const_iterator it;
     QString currentURL = "";
-    QMap<QString, QString>::const_iterator it;
 
     while(!rec.empty()){
         QByteArray data;
@@ -225,9 +234,16 @@ void MessageTransportService::writeHttpNotify(const QList<AgentInfo> agentsToBeN
             }
             writer.writeEndElement();
 
+            writer.writeStartElement(TRANSPORT_ADDRESSES);
+            for (QVariantMap::const_iterator it2 = info.transportAddresses.constBegin(); it2 != info.transportAddresses.constEnd(); ++it2){
+                writer.writeStartElement("transportAddress");
+                writer.writeTextElement(URL, it2.key());
+                writer.writeTextElement(METRIC, it2.value().toString());
+                writer.writeEndElement();//transportAddress
+            }
+            writer.writeEndElement();//transportAddresses
 
-            writer.writeTextElement(URL, info.address.url);
-            writer.writeTextElement(METRIC, QString::number(++info.address.properties.metric));
+            writer.writeTextElement(TIMESTAMP, info.timeStamp.toString());
 
             writer.writeEndElement(); //agent
 
@@ -239,7 +255,7 @@ void MessageTransportService::writeHttpNotify(const QList<AgentInfo> agentsToBeN
             rec.remove(key);
         keysToRemove.clear();
 
-        //qDebug() << data;
+        // qDebug() << data;
         sendHttp(data, currentURL, true); //TODO MESSAGE
 
 
@@ -248,11 +264,11 @@ void MessageTransportService::writeHttpNotify(const QList<AgentInfo> agentsToBeN
 
 }
 
-void MessageTransportService::writeHttpMessage(const QMap<QString, QString> recipients, const QString sender, QByteArray msg)
+void MessageTransportService::writeHttpMessage(const QHash<QString, QString> recipients, const QString sender, QByteArray msg)
 {
-    QMap<QString, QString> rec = recipients;
+    QHash<QString, QString> rec = recipients;
     QString currentURL = "";
-    QMap<QString, QString>::const_iterator it = rec.constBegin();
+    QHash<QString, QString>::const_iterator it = rec.constBegin();
 
 
 
@@ -289,7 +305,7 @@ void MessageTransportService::writeHttpMessage(const QMap<QString, QString> reci
         writer.writeEndElement(); //envelope
         writer.writeEndDocument();
 
-        //qDebug() << data;
+        qDebug() << data;
 
         foreach(QString key, keysToRemove)
             rec.remove(key);
@@ -301,7 +317,7 @@ void MessageTransportService::writeHttpMessage(const QMap<QString, QString> reci
 
 void MessageTransportService::sendHttp(const QByteArray msg, const QString targetAgent, bool Notify)
 {
-    QUrl url(Notify ? targetAgent + "/AgentNotify" : targetAgent);
+    QUrl url(Notify ? targetAgent /*+ "/AgentNotify"*/ : targetAgent);
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     QNetworkRequest request;
     request.setUrl(url);
@@ -339,10 +355,16 @@ QMap<QString, AgentInfo> MessageTransportService::processHttpNotify(QByteArray d
                 for(int i = 0; i < peData.childNodes().count(); ++i){
                     info.desription.flags << peData.childNodes().at(i).toElement().text();
                 }
-            }else if(tagNam == URL) {
-                info.address.url = peData.text();
-            }else if(tagNam == METRIC) {
-                info.address.properties.metric = peData.text().toInt();
+            }else if(tagNam == TRANSPORT_ADDRESSES) {
+                QDomNodeList taNodeList = peData.childNodes();
+                for (int i = 0; i < taNodeList.length(); ++i){
+                    QDomNode node = taNodeList.item(i).toElement().firstChild();
+                    if (node.toElement().tagName() == URL && node.nextSibling().toElement().tagName() == METRIC)
+                        info.transportAddresses[node.toElement().text()] = node.nextSibling().toElement().text().toInt();
+                }
+
+            }else if(tagNam == TIMESTAMP) {
+                info.timeStamp =   QTime::fromString(peData.text());
             }
 
             pEntries = pEntries.nextSibling();
@@ -351,21 +373,100 @@ QMap<QString, AgentInfo> MessageTransportService::processHttpNotify(QByteArray d
         agents[info.desription.name] = info;
     }
     return agents;
+}
 
+void MessageTransportService::processHttpMessage(QByteArray data){
+    emit needAgentList();
+
+    QDomDocument doc;
+    QStringList myAgents;
+    QStringList forwardAgents;
+
+    doc.setContent(data);
+
+
+    QDomElement element = doc.documentElement();
+    QDomNode node = element.namedItem("recipients");
+    if (!node.isNull()){
+        QDomNodeList nodeList = node.toElement().childNodes();
+        for (int i = nodeList.length()-1; i >= 0; --i){
+            if (platformAgents.contains(nodeList.item(i).toElement().text())){
+                myAgents << nodeList.item(i).toElement().text();
+            } else {
+                forwardAgents << nodeList.item(i).toElement().text();
+            }
+        }
+    }
+
+    qDebug() << "My agents: " << myAgents;
+    qDebug() << "Remote agents: " << forwardAgents;
+
+    QByteArray msg;
+    QString sender;
+    QString url;
+    int minMetric = 999;
+
+    node = element.namedItem("sender");
+    sender = node.toElement().text();
+    node = element.namedItem("message");
+    msg = node.toElement().firstChild().toCDATASection().nodeValue().toUtf8();
+
+    QHash<QString, QString> recipients;
+    foreach(QString agent, forwardAgents){
+
+        for(QVariantMap::const_iterator it = remoteAgents[agent].transportAddresses.constBegin();
+            it != remoteAgents[agent].transportAddresses.constEnd(); ++it){
+            qDebug() << it.key();
+            qDebug() << it.value();
+
+            if (it.value().toInt() < minMetric){
+                url = it.key();
+                minMetric = it.value().toInt();
+            }
+        }
+
+
+        recipients[agent] = url;
+        url = "";
+        minMetric = 999;
+    }
+    writeHttpMessage(recipients, sender, msg);
+
+
+
+
+    emit messageReady(myAgents, msg);
 }
 
 // ///////////////////////////////////////////////////////// PLATFORM /////////////////////////////////////////////////////////
 
 Platform::Platform(QObject *parent) : QObject(parent)
 {
-    qDebug() << "Platforma";
+    //qDebug() << "Platforma";
     //connect(&MTS, SIGNAL(httpNotifyReceived(QByteArray)), this, SLOT(forwardHttpNotifyToDs(QMap<QString, AgentInfo>)));
+    connect(&mts, SIGNAL(httpMessageReceived(QByteArray)), this, SLOT(handleHttpMessage(QByteArray)));
+    connect(&mts, SIGNAL(needAgentList()), this, SLOT(sendAgentListToMts()));
+    connect(&mts, SIGNAL(messageReady(QStringList,QByteArray)), this, SLOT(handleAgentMessage(QStringList,QByteArray)));
+}
+
+void Platform::handleHttpMessage(QByteArray msg){
+
 }
 
 void Platform::forwardHttpNotifyToDs(QMap<QString, AgentInfo> agents)
 {
     //todo
     return;
+}
+
+void Platform::sendAgentListToMts(){
+    mts.platformAgents = platformAgents;
+    mts.remoteAgents = remoteAgents;
+}
+
+void Platform::handleAgentMessage(QStringList recipients, QByteArray msg){
+    qDebug() << recipients;
+    qDebug() << msg;
 }
 
 

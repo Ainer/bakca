@@ -11,39 +11,76 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    QMap<QString, QString> map;
+    QHash<QString, QString> hash;
     Platform platform;
 
-    platform.ds.sendMulticastNotifyPacket();
+    TransportAddressProperties props;
+
+
 
     AgentInfo ahoj;
 
     ahoj.desription.name = "filip";
     ahoj.desription.flags << "nie" << "ano" << "nie";
     ahoj.desription.services << "0" << "1" << "1";
-    ahoj.address.url = "http://niekto.sk";
-    ahoj.address.properties.metric = 2;
 
-    QList<AgentInfo> agents;
-    agents.append(ahoj);
+    props.metric = 3;
+    props.timestamp = QTime::currentTime().addSecs(10);
+    ahoj.transportAddresses["127.0.0.1:22222"] = QVariant(3);
+    ahoj.timeStamp = QTime::currentTime().addSecs(10);
+
+    ahoj.transportAddresses.clear();
+
+    QHash<QString, AgentInfo> agents;
+    QList<AgentInfo> toBeNotified;
+    agents.insert(ahoj.desription.name,ahoj);
+    toBeNotified.append(ahoj);
 
     ahoj.desription.name = "magda";
-    ahoj.desription.flags << "nie" << "ano" << "ano";
+    ahoj.desription.flags << "GW" << "ano" << "ano";
     ahoj.desription.services << "1" << "1" << "1";
-    ahoj.address.url = "http://158.195.212.98";
-    ahoj.address.properties.metric = 5;
+    ahoj.transportAddresses[QString("128.0.0.1:22452")] = QVariant(4);
+    ahoj.timeStamp = QTime::currentTime().addSecs(20);
 
-    agents.append(ahoj);
+    agents.insert(ahoj.desription.name,ahoj);
+    toBeNotified.append(ahoj);
 
 
 
 
-    map.insert("milos", "http://ahoj.sk");
-    map.insert("marek", "http://nie.sk");
-    map.insert("maros", "http://158.195.212.98:22222");
 
-    platform.mts.writeHttpNotify(agents, map, "Adko");
-    //platform.mts.writeHttpMessage(map, "Adko", "Niggermaniak Marian");
+
+    hash.insert("milos", "http://ahoj.net");
+    hash.insert("roman", "http://127.0.0.1:22222");
+    hash.insert("jaroslav", "http://127.0.0.1:22222");
+    hash.insert("filip", "http://127.0.0.1:22222");
+
+    //platform.mts.writeHttpNotify(toBeNotified, hash, "Adko");
+    platform.mts.writeHttpMessage(hash, "Adko", "Toto je message");
+
+    platform.ds.platformAgents = agents;
+    platform.platformAgents = agents;
+
+    agents.clear();
+    ahoj.transportAddresses.clear();
+
+    ahoj.desription.name = "roman";
+    ahoj.desription.flags << "GW" << "ano" << "ano";
+    ahoj.desription.services << "1" << "1" << "1";
+    ahoj.transportAddresses[QString("http://ahoj.sk")] = QVariant(4);
+    ahoj.timeStamp = QTime::currentTime().addSecs(5);
+    agents.insert(ahoj.desription.name, ahoj);
+
+    ahoj.transportAddresses.clear();
+
+    ahoj.desription.name = "jaroslav";
+    ahoj.desription.flags << "GW" << "ano" << "ano";
+    ahoj.desription.services << "1" << "1" << "1";
+    ahoj.transportAddresses[QString("http://nie.sk")] = QVariant(4);
+    ahoj.timeStamp = QTime::currentTime().addSecs(9);
+    agents.insert(ahoj.desription.name, ahoj);
+
+    platform.remoteAgents = agents;
 
     return a.exec();
 }
