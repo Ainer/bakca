@@ -25,18 +25,22 @@ int main(int argc, char *argv[])
     ahoj.desription.services << "0" << "1" << "1";
 
     props.metric = 3;
-    props.timestamp = QTime::currentTime().addSecs(10);
+    props.validUntil = QTime::currentTime().addSecs(10);
+    //props.sourceDs = &platform.ds;
     ahoj.transportAddresses["127.0.0.1:22222"] = props;
+    props.sourceDs = nullptr;
 
-    ahoj.transportAddresses.clear();
 
     QHash<QString, AgentInfo> agents;
     QList<AgentInfo> toBeNotified;
+
     agents.insert(ahoj.desription.name,ahoj);
     toBeNotified.append(ahoj);
+    ahoj.transportAddresses.clear();
 
     props.metric = 5;
-    props.timestamp = QTime::currentTime().addSecs(11);
+    props.validUntil = QTime::currentTime().addSecs(11);
+    props.sourceDs = &platform.ds;
 
     ahoj.desription.name = "magda";
     ahoj.desription.flags << "GW" << "ano" << "ano";
@@ -47,7 +51,9 @@ int main(int argc, char *argv[])
     toBeNotified.append(ahoj);
 
 
+    platform.platformAgents = agents;
 
+    platform.ds.sendMulticastNotifyPacket();
 
 
 
@@ -59,14 +65,14 @@ int main(int argc, char *argv[])
     platform.mts.writeHttpNotify(toBeNotified, hash, "Adko");
     //platform.mts.writeHttpMessage(hash, "Adko", "Toto je message");
 
-    platform.ds.setPlatformAgents(agents);
-    platform.platformAgents = agents;
+
+
 
     agents.clear();
     ahoj.transportAddresses.clear();
 
     props.metric = 2;
-    props.timestamp = QTime::currentTime().addSecs(15);
+    props.validUntil = QTime::currentTime().addSecs(15);
 
     ahoj.desription.name = "roman";
     ahoj.desription.flags << "GW" << "ano" << "ano";
@@ -77,7 +83,7 @@ int main(int argc, char *argv[])
     ahoj.transportAddresses.clear();
 
     props.metric = 4;
-    props.timestamp = QTime::currentTime().addSecs(22);
+    props.validUntil = QTime::currentTime().addSecs(22);
 
     ahoj.desription.name = "jaroslav";
     ahoj.desription.flags << "GW" << "ano" << "ano";

@@ -14,14 +14,17 @@
 enum MessageType{
     Notify, StandardMessage, Bye
 };
-const QStringList MESSAGE_TYPE_STRINGS = {"notify", "standardMessage", "Bye"};
+const QStringList MESSAGE_TYPE_STRINGS = {"notify", "standardMessage", "Bye", "'Sup"};
 
+class Platform;
 
+class DiscoveryService;
 
 struct TransportAddressProperties {
 public:
     int metric;
-    QTime timestamp;
+    QTime validUntil;
+    DiscoveryService *sourceDs;
 };
 Q_DECLARE_METATYPE(TransportAddressProperties)
 
@@ -90,23 +93,16 @@ private:
 };
 
 */
-
 class DiscoveryService: public QObject
 {
     Q_OBJECT
 
 private:
+    Platform *platform;
     QUdpSocket *udpSocket;
     QHostAddress groupAddress;
-    QHash<QString, AgentInfo> forwardedAgents;
-    QHash<QString, AgentInfo> platformAgents;
-    void updateAgents(QHash<QString, AgentInfo> newAgents);
 public:
-    DiscoveryService(QObject *parent = 0);
-
-    void setPlatformAgents(QHash<QString, AgentInfo> agents){platformAgents = agents;}
-
-    bool parseUrlPacket(const QByteArray msg);
+    DiscoveryService(Platform *platform);
     bool parseNotifyPacket(QByteArray msg);
     void sendMulticastNotifyPacket();
 
@@ -116,35 +112,33 @@ signals:
 private slots:
     void processPendingDatagrams();
 
-public slots:
-    void processXmlNotify(QByteArray data);
 
 
 };
-
 
 class MessageTransportService: public QObject
 {
     Q_OBJECT
 
 private:
+    Platform *platform;
     Tufao::HttpServer server;
-    QNetworkAccessManager *manager;
+    Tufao::HttpServerRequest *m_request;
     void sendHttp(const QByteArray msg, const QString targetAgent, MessageType type);
-    void processHttpMessage(QByteArray data);
+    void processXmlNotify(QByteArray data);
+
 
 public:
     //TcpClient tcpClient;
     //TcpServer tcpServer;
-    QHash<QString, AgentInfo> platformAgents;
-    QHash<QString, AgentInfo> forwardedAgents;
-    MessageTransportService(QObject *parent = 0);
-    void writeHttpNotify(const QList<AgentInfo> agentsToBeNotified , const QHash<QString, QString> recipients, const QString sender);
+    MessageTransportService(Platform *platform);
+    QByteArray writeHttpNotify(const QList<AgentInfo> agentsToBeNotified , const QHash<QString, QString> recipients, const QString sender);
     void writeHttpMessage(const QHash<QString, QString> recipients, const QString sender, QByteArray msg, MessageType type);
 
 private slots:
     void handleRequest(Tufao::HttpServerRequest &request,
                        Tufao::HttpServerResponse &response);
+    void processHttpMessage();
 
 signals:
     void needAgentList();
@@ -156,7 +150,13 @@ signals:
 class Platform: public QObject
 {
     Q_OBJECT
+
+private:
+    QTimer *validationTimer;
+    QTimer *localNetworkNotificationTimer;
+    QTimer *forwardedAgentsNotificationTimer;
 public:
+    bool gateway = true;
     MessageTransportService mts;
     DiscoveryService ds;
     Platform(QObject *parent = 0);
@@ -164,9 +164,8 @@ public:
     QHash<QString, AgentInfo> forwardedAgents;
 
 private slots:
-    void updateforwardedAgents(QHash<QString, AgentInfo> agents){forwardedAgents = agents;}
-    void sendAgentListToMts();
     void handleAgentMessage(QStringList recipients, QByteArray msg);
+    void eraseInvalidTransportAddresses();
 
 };
 

@@ -19,8 +19,8 @@
 
 QT_BEGIN_MOC_NAMESPACE
 struct qt_meta_stringdata_DiscoveryService_t {
-    QByteArrayData data[7];
-    char stringdata[113];
+    QByteArrayData data[5];
+    char stringdata[91];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -33,14 +33,11 @@ QT_MOC_LITERAL(0, 0, 16),
 QT_MOC_LITERAL(1, 17, 22),
 QT_MOC_LITERAL(2, 40, 0),
 QT_MOC_LITERAL(3, 41, 24),
-QT_MOC_LITERAL(4, 66, 23),
-QT_MOC_LITERAL(5, 90, 16),
-QT_MOC_LITERAL(6, 107, 4)
+QT_MOC_LITERAL(4, 66, 23)
     },
     "DiscoveryService\0forwardedAgentsUpdated\0"
     "\0QHash<QString,AgentInfo>\0"
-    "processPendingDatagrams\0processXmlNotify\0"
-    "data\0"
+    "processPendingDatagrams\0"
 };
 #undef QT_MOC_LITERAL
 
@@ -50,7 +47,7 @@ static const uint qt_meta_data_DiscoveryService[] = {
        7,       // revision
        0,       // classname
        0,    0, // classinfo
-       3,   14, // methods
+       2,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -58,18 +55,16 @@ static const uint qt_meta_data_DiscoveryService[] = {
        1,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    1,   29,    2, 0x06,
+       1,    1,   24,    2, 0x06,
 
  // slots: name, argc, parameters, tag, flags
-       4,    0,   32,    2, 0x08,
-       5,    1,   33,    2, 0x0a,
+       4,    0,   27,    2, 0x08,
 
  // signals: parameters
     QMetaType::Void, 0x80000000 | 3,    2,
 
  // slots: parameters
     QMetaType::Void,
-    QMetaType::Void, QMetaType::QByteArray,    6,
 
        0        // eod
 };
@@ -81,7 +76,6 @@ void DiscoveryService::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int
         switch (_id) {
         case 0: _t->forwardedAgentsUpdated((*reinterpret_cast< QHash<QString,AgentInfo>(*)>(_a[1]))); break;
         case 1: _t->processPendingDatagrams(); break;
-        case 2: _t->processXmlNotify((*reinterpret_cast< QByteArray(*)>(_a[1]))); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -121,13 +115,13 @@ int DiscoveryService::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 3)
+        if (_id < 2)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 3;
+        _id -= 2;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 3)
+        if (_id < 2)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 3;
+        _id -= 2;
     }
     return _id;
 }
@@ -139,8 +133,8 @@ void DiscoveryService::forwardedAgentsUpdated(QHash<QString,AgentInfo> _t1)
     QMetaObject::activate(this, &staticMetaObject, 0, _a);
 }
 struct qt_meta_stringdata_MessageTransportService_t {
-    QByteArrayData data[10];
-    char stringdata[156];
+    QByteArrayData data[11];
+    char stringdata[175];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -158,13 +152,14 @@ QT_MOC_LITERAL(5, 71, 13),
 QT_MOC_LITERAL(6, 85, 25),
 QT_MOC_LITERAL(7, 111, 7),
 QT_MOC_LITERAL(8, 119, 26),
-QT_MOC_LITERAL(9, 146, 8)
+QT_MOC_LITERAL(9, 146, 8),
+QT_MOC_LITERAL(10, 155, 18)
     },
     "MessageTransportService\0needAgentList\0"
     "\0messageReady\0notifyMessageReady\0"
     "handleRequest\0Tufao::HttpServerRequest&\0"
     "request\0Tufao::HttpServerResponse&\0"
-    "response\0"
+    "response\0processHttpMessage\0"
 };
 #undef QT_MOC_LITERAL
 
@@ -174,7 +169,7 @@ static const uint qt_meta_data_MessageTransportService[] = {
        7,       // revision
        0,       // classname
        0,    0, // classinfo
-       4,   14, // methods
+       5,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -182,12 +177,13 @@ static const uint qt_meta_data_MessageTransportService[] = {
        3,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    0,   34,    2, 0x06,
-       3,    2,   35,    2, 0x06,
-       4,    1,   40,    2, 0x06,
+       1,    0,   39,    2, 0x06,
+       3,    2,   40,    2, 0x06,
+       4,    1,   45,    2, 0x06,
 
  // slots: name, argc, parameters, tag, flags
-       5,    2,   43,    2, 0x08,
+       5,    2,   48,    2, 0x08,
+      10,    0,   53,    2, 0x08,
 
  // signals: parameters
     QMetaType::Void,
@@ -196,6 +192,7 @@ static const uint qt_meta_data_MessageTransportService[] = {
 
  // slots: parameters
     QMetaType::Void, 0x80000000 | 6, 0x80000000 | 8,    7,    9,
+    QMetaType::Void,
 
        0        // eod
 };
@@ -209,6 +206,7 @@ void MessageTransportService::qt_static_metacall(QObject *_o, QMetaObject::Call 
         case 1: _t->messageReady((*reinterpret_cast< QStringList(*)>(_a[1])),(*reinterpret_cast< QByteArray(*)>(_a[2]))); break;
         case 2: _t->notifyMessageReady((*reinterpret_cast< QByteArray(*)>(_a[1]))); break;
         case 3: _t->handleRequest((*reinterpret_cast< Tufao::HttpServerRequest(*)>(_a[1])),(*reinterpret_cast< Tufao::HttpServerResponse(*)>(_a[2]))); break;
+        case 4: _t->processHttpMessage(); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -260,13 +258,13 @@ int MessageTransportService::qt_metacall(QMetaObject::Call _c, int _id, void **_
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 4)
+        if (_id < 5)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 4;
+        _id -= 5;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 4)
+        if (_id < 5)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 4;
+        _id -= 5;
     }
     return _id;
 }
@@ -291,8 +289,8 @@ void MessageTransportService::notifyMessageReady(QByteArray _t1)
     QMetaObject::activate(this, &staticMetaObject, 2, _a);
 }
 struct qt_meta_stringdata_Platform_t {
-    QByteArrayData data[9];
-    char stringdata[118];
+    QByteArrayData data[6];
+    char stringdata[76];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -302,19 +300,14 @@ struct qt_meta_stringdata_Platform_t {
 static const qt_meta_stringdata_Platform_t qt_meta_stringdata_Platform = {
     {
 QT_MOC_LITERAL(0, 0, 8),
-QT_MOC_LITERAL(1, 9, 21),
-QT_MOC_LITERAL(2, 31, 0),
-QT_MOC_LITERAL(3, 32, 24),
-QT_MOC_LITERAL(4, 57, 6),
-QT_MOC_LITERAL(5, 64, 18),
-QT_MOC_LITERAL(6, 83, 18),
-QT_MOC_LITERAL(7, 102, 10),
-QT_MOC_LITERAL(8, 113, 3)
+QT_MOC_LITERAL(1, 9, 18),
+QT_MOC_LITERAL(2, 28, 0),
+QT_MOC_LITERAL(3, 29, 10),
+QT_MOC_LITERAL(4, 40, 3),
+QT_MOC_LITERAL(5, 44, 30)
     },
-    "Platform\0updateforwardedAgents\0\0"
-    "QHash<QString,AgentInfo>\0agents\0"
-    "sendAgentListToMts\0handleAgentMessage\0"
-    "recipients\0msg\0"
+    "Platform\0handleAgentMessage\0\0recipients\0"
+    "msg\0eraseInvalidTransportAddresses\0"
 };
 #undef QT_MOC_LITERAL
 
@@ -324,7 +317,7 @@ static const uint qt_meta_data_Platform[] = {
        7,       // revision
        0,       // classname
        0,    0, // classinfo
-       3,   14, // methods
+       2,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -332,14 +325,12 @@ static const uint qt_meta_data_Platform[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    1,   29,    2, 0x08,
-       5,    0,   32,    2, 0x08,
-       6,    2,   33,    2, 0x08,
+       1,    2,   24,    2, 0x08,
+       5,    0,   29,    2, 0x08,
 
  // slots: parameters
-    QMetaType::Void, 0x80000000 | 3,    4,
+    QMetaType::Void, QMetaType::QStringList, QMetaType::QByteArray,    3,    4,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::QStringList, QMetaType::QByteArray,    7,    8,
 
        0        // eod
 };
@@ -349,9 +340,8 @@ void Platform::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, vo
     if (_c == QMetaObject::InvokeMetaMethod) {
         Platform *_t = static_cast<Platform *>(_o);
         switch (_id) {
-        case 0: _t->updateforwardedAgents((*reinterpret_cast< QHash<QString,AgentInfo>(*)>(_a[1]))); break;
-        case 1: _t->sendAgentListToMts(); break;
-        case 2: _t->handleAgentMessage((*reinterpret_cast< QStringList(*)>(_a[1])),(*reinterpret_cast< QByteArray(*)>(_a[2]))); break;
+        case 0: _t->handleAgentMessage((*reinterpret_cast< QStringList(*)>(_a[1])),(*reinterpret_cast< QByteArray(*)>(_a[2]))); break;
+        case 1: _t->eraseInvalidTransportAddresses(); break;
         default: ;
         }
     }
@@ -382,13 +372,13 @@ int Platform::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 3)
+        if (_id < 2)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 3;
+        _id -= 2;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 3)
+        if (_id < 2)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 3;
+        _id -= 2;
     }
     return _id;
 }
