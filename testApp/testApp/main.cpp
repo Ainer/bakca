@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     props.metric = 3;
     props.validUntil = QTime::currentTime().addSecs(10);
     //props.sourceDs = &platform.ds;
-    ahoj.transportAddresses["127.0.0.1:22222"] = props;
+    ahoj.transportAddresses["http://127.0.0.1:22222/filip"] = props;
     props.sourceDs = nullptr;
 
 
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     ahoj.desription.name = "magda";
     ahoj.desription.flags << "GW" << "ano" << "ano";
     ahoj.desription.services << "1" << "1" << "1";
-    ahoj.transportAddresses[QString("128.0.0.1:22452")] = props;
+    ahoj.transportAddresses[QString("http://128.0.0.1:22452/magda")] = props;
 
     agents.insert(ahoj.desription.name,ahoj);
     toBeNotified.append(ahoj);
@@ -62,10 +62,9 @@ int main(int argc, char *argv[])
     hash.insert("jaroslav", "http://127.0.0.1:22222");
     hash.insert("filip", "http://127.0.0.1:22222");
 
-    platform.mts.writeHttpNotify(toBeNotified, hash, "Adko");
+    platform.gatewayAgents << "http://127.0.0.1:22222" << "http://158.195.212.98:22222";
+
     //platform.mts.writeHttpMessage(hash, "Adko", "Toto je message");
-
-
 
 
     agents.clear();
@@ -75,7 +74,7 @@ int main(int argc, char *argv[])
     props.validUntil = QTime::currentTime().addSecs(15);
 
     ahoj.desription.name = "roman";
-    ahoj.desription.flags << "GW" << "ano" << "ano";
+    ahoj.desription.flags << "ano" << "ano";
     ahoj.desription.services << "1" << "1" << "1";
     ahoj.transportAddresses[QString("http://ahoj.sk")] = props;
     agents.insert(ahoj.desription.name, ahoj);
@@ -86,12 +85,14 @@ int main(int argc, char *argv[])
     props.validUntil = QTime::currentTime().addSecs(22);
 
     ahoj.desription.name = "jaroslav";
-    ahoj.desription.flags << "GW" << "ano" << "ano";
+    ahoj.desription.flags << "ano" << "ano";
     ahoj.desription.services << "1" << "1" << "1";
     ahoj.transportAddresses[QString("http://nie.sk")] = props;
     agents.insert(ahoj.desription.name, ahoj);
 
-    //platform.forwardedAgents = agents;
+    platform.forwardedAgents = agents;
+
+    platform.mts.writeHttpNotify();
 
     return a.exec();
 }

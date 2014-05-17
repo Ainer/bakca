@@ -8,7 +8,7 @@
 #include "DSMTS.h"
 
 const QString MULTICAST_ADDRESS = "239.255.43.21";
-const QString MY_ADDRESS = "http://158.195.212.98";
+const QString MY_ADDRESS = "http://158.195.212.98:22222";
 const QString LOOPBACK = "127.0.0.1";
 const int MULTICAST_PORT = 45454;
 
@@ -184,64 +184,78 @@ void MessageTransportService::handleRequest(Tufao::HttpServerRequest &request, T
     //TODO PROCESS MSG
     m_request = &request;
     connect (&request , SIGNAL(end()), this, SLOT(processHttpMessage()));
+    qDebug() << "my address: " << request.socket().localAddress().toString();
+    qDebug() << "peer address: " << request.socket().peerAddress().toString();
     response.writeHead(Tufao::HttpResponseStatus::NO_RESPONSE);
     response.headers().replace("Content-Type", "text/plain");
     response.end(":(");
 }
 
-QByteArray MessageTransportService::writeHttpNotify(){
+inline void inserAgents(QXmlStreamWriter *writer, AgentInfo info, bool forwarded){
+    writer->writeStartElement("agent");
+
+    writer->writeTextElement(NAME, info.desription.name);
+
+
+    writer->writeStartElement(FLAGS);
+    foreach (QString flag, info.desription.flags)
+    {
+        writer->writeTextElement("flag", flag);
+    }
+    writer->writeEndElement();
+
+
+    writer->writeStartElement(SERVICES);
+    foreach (QString service, info.desription.services)
+    {
+        writer->writeTextElement("service", service);
+    }
+    writer->writeEndElement();
+
+    writer->writeStartElement("routes");
+    for (QHash<QString, TransportAddressProperties>::const_iterator it2 = info.transportAddresses.constBegin();
+         it2 != info.transportAddresses.constEnd(); ++it2){
+        writer->writeStartElement("route");
+        writer->writeTextElement(METRIC, QString::number(it2.value().metric));
+        writer->writeTextElement(VALID_UNTIL, it2.value().validUntil.toString());
+        writer->writeTextElement("transportAddress", forwarded ? MY_ADDRESS + "/forwardedAgents" : it2.key());
+        writer->writeEndElement(); // route
+    }
+    writer->writeEndElement(); // routes
+    writer->writeEndElement(); //agent
+}
+
+void MessageTransportService::writeHttpNotify(){
 
     QByteArray data;
-    QXmlStreamWriter writer(&data);
-    writer.setAutoFormatting(true);
+    QXmlStreamWriter *writer = new QXmlStreamWriter(&data);
+    writer->setAutoFormatting(true);
 
     qDebug() << "PISEM SPRAVU";
 
-    writer.writeStartDocument();
-    writer.writeStartElement("agents");
+    writer->writeStartDocument();
+    writer->writeStartElement("agents");
+
+    foreach(AgentInfo info, platform->platformAgents)
+        inserAgents(writer, info, false);
+
     foreach(AgentInfo info, platform->forwardedAgents)
-    {
-        writer.writeStartElement("agent");
-
-        writer.writeTextElement(NAME, info.desription.name);
+        inserAgents(writer, info, true);
 
 
-        writer.writeStartElement(FLAGS);
-        foreach (QString flag, info.desription.flags)
-        {
-            writer.writeTextElement("flag", flag);
-        }
-        writer.writeEndElement();
 
-
-        writer.writeStartElement(SERVICES);
-        foreach (QString service, info.desription.services)
-        {
-            writer.writeTextElement("service", service);
-        }
-        writer.writeEndElement();
-
-        writer.writeStartElement("routes");
-        for (QHash<QString, TransportAddressProperties>::const_iterator it2 = info.transportAddresses.constBegin();
-             it2 != info.transportAddresses.constEnd(); ++it2){
-            writer.writeStartElement("route");
-            writer.writeTextElement(METRIC, QString::number(it2.value().metric));
-            writer.writeTextElement(VALID_UNTIL, it2.value().validUntil.toString());
-            writer.writeEndElement(); // route
-        }
-    }
-    writer.writeEndElement(); // routes
-    writer.writeTextElement("transportAddress", MY_ADDRESS + "/forwardedAgents");
-    writer.writeEndElement(); //agent
-    writer.writeEndElement(); //agents
-    writer.writeEndDocument();
+    writer->writeEndElement(); //agents
+    writer->writeEndDocument();
 
     qDebug() << data;
 
-    writeHttpMessage(recipients  //GW agents
-                     , MY_ADDRESS, data, MessageType::Notify);//prehod na spravne miesto
+    QHash<QString, QString> recipients;
+    foreach(QString address, platform->gatewayAgents)
+        recipients[address] = address;
+    qDebug() << recipients.keys();
 
-    return data;
+    writeHttpMessage(recipients  //GW agents
+                     ,MY_ADDRESS, data, MessageType::Notify);//prehod na spravne miesto
 }
 
 void MessageTransportService::writeHttpMessage(const QHash<QString, QString> recipients, const QString sender, QByteArray msg,
@@ -268,16 +282,19 @@ void MessageTransportService::writeHttpMessage(const QHash<QString, QString> rec
         writer.writeStartElement("envelope");
         writer.writeTextElement("messageType", MESSAGE_TYPE_STRINGS[type]);
         writer.writeTextElement("sender", sender);
-        writer.writeStartElement("recipients");
 
-        for (;it != rec.constEnd(); ++it){
-            if (it.value() == currentURL){
-                writer.writeTextElement("recipient", it.key());
-                keysToRemove.append(it.key());
+        if (type == MessageType::StandardMessage){
+            writer.writeStartElement("recipients");
+
+            for (;it != rec.constEnd(); ++it){
+                if (it.value() == currentURL){
+                    writer.writeTextElement("recipient", it.key());
+                    keysToRemove.append(it.key());
+                }
             }
-        }
 
-        writer.writeEndElement(); //recipients
+            writer.writeEndElement(); //recipients
+        }
 
         writer.writeStartElement("message");
 
@@ -289,11 +306,16 @@ void MessageTransportService::writeHttpMessage(const QHash<QString, QString> rec
         writer.writeEndDocument();
 
         //qDebug() << data;
-
-        foreach(QString key, keysToRemove)
-            rec.remove(key);
-        keysToRemove.clear();
-        sendHttp(data, currentURL, type); //TODO MESSAGE
+        if (type == MessageType::StandardMessage){
+            foreach(QString key, keysToRemove)
+                rec.remove(key);
+            keysToRemove.clear();
+            sendHttp(data, currentURL, type);
+        } else {
+            foreach(QString address, recipients.values())
+               sendHttp(data, address, type);
+            return;
+        }
         //qDebug() << currentURL;
     }
 }

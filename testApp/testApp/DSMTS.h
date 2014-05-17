@@ -132,7 +132,7 @@ public:
     //TcpClient tcpClient;
     //TcpServer tcpServer;
     MessageTransportService(Platform *platform);
-    QByteArray writeHttpNotify(const QList<AgentInfo> agentsToBeNotified , const QHash<QString, QString> recipients, const QString sender);
+    void writeHttpNotify();
     void writeHttpMessage(const QHash<QString, QString> recipients, const QString sender, QByteArray msg, MessageType type);
 
 private slots:
@@ -162,6 +162,7 @@ public:
     Platform(QObject *parent = 0);
     QHash<QString, AgentInfo> platformAgents;
     QHash<QString, AgentInfo> forwardedAgents;
+    QList<QString> gatewayAgents;
 
 private slots:
     void handleAgentMessage(QStringList recipients, QByteArray msg);
