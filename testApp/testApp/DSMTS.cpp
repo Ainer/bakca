@@ -20,7 +20,17 @@ const QString URL = "url";
 const QString METRIC = "metric";
 const QString VALID_UNTIL = "validUntil";
 
+int number = 0;
 
+
+
+
+//TODO
+//HELLO/BYE message on startup and finish and handling +handling
+//loading/saving persistent GW list +
+//Beautify
+//
+//
 // ///////////////////////////////////////////////////////// DISCOVERY SERVICE /////////////////////////////////////////////////////////
 
 DiscoveryService::DiscoveryService(Platform *platform)
@@ -36,8 +46,45 @@ DiscoveryService::DiscoveryService(Platform *platform)
 
     connect(udpSocket, SIGNAL(readyRead()),
             this, SLOT(processPendingDatagrams()));
-
+    writeStatusMessage("Hello");
     //sendMulticastNotifyPacket();
+}
+DiscoveryService::~DiscoveryService(){
+    writeStatusMessage("Bye");
+}
+
+bool DiscoveryService::saveGWtoFile(){
+    QFile saveFile(QStringLiteral("GWAgents.json"));
+
+    if (!saveFile.open(QIODevice::WriteOnly)) {
+        qWarning("Couldn't open save file.");
+        return false;
+    }
+
+    QJsonDocument saveDoc(QJsonArray::fromStringList(platform->gatewayAgents));
+    qDebug() << saveDoc.toJson();
+    saveFile.write(saveDoc.toJson());
+    return true;
+}
+
+bool DiscoveryService::loadGWfromFile(){
+    QFile loadFile(QStringLiteral("GWAgents.json"));
+
+    if (!loadFile.open(QIODevice::ReadOnly)) {
+        qWarning("Couldn't open save file.");
+        return false;
+    }
+
+    QByteArray saveData = loadFile.readAll();
+
+    QJsonDocument loadDoc(QJsonDocument::fromJson(saveData));
+    for (int i = 0; i < loadDoc.array().count(); ++i){
+        if (!platform->gatewayAgents.contains(loadDoc.array()[i].toString()))
+            platform->gatewayAgents.append(loadDoc.array()[i].toString());
+    }
+
+    qDebug() << platform->gatewayAgents;
+    return true;
 }
 
 void DiscoveryService::processPendingDatagrams()
@@ -46,16 +93,17 @@ void DiscoveryService::processPendingDatagrams()
         QByteArray datagram;
         datagram.resize(udpSocket->pendingDatagramSize());
         udpSocket->readDatagram(datagram.data(), datagram.size());
-        parseNotifyPacket(datagram);
+        handleDatagram(datagram);
     }
 }
 
-inline QJsonObject fromProperties(TransportAddressProperties props){
+inline QJsonObject fromProperties(TransportAddressProperties props, bool isPlatformAgent){
     QJsonObject object;
     QJsonValue value;
     value = props.metric;
     object.insert(METRIC, value);
-    value = props.validUntil.toString();
+    if (isPlatformAgent)
+        value = QTime::currentTime().addSecs(30).toString();
     object.insert(VALID_UNTIL, value);
 
     return object;
@@ -68,49 +116,69 @@ inline TransportAddressProperties fromJsonObject(QJsonObject object){
     props.metric = value.toInt();
     value = object[VALID_UNTIL];
     props.validUntil = QTime::fromString(value.toString());
+    return props;
 }
 
-bool DiscoveryService::parseNotifyPacket(QByteArray msg) // TODO CHANGE TO LIST
+void DiscoveryService::handleDatagram(QByteArray data){
+    QJsonDocument doc = QJsonDocument::fromBinaryData(data);
+    QVariantMap message = doc.object().toVariantMap();
+    if (message["type"].toString() == MESSAGE_TYPE_STRINGS[MessageType::Notify])
+        parseNotifyPacket(message);
+    else if (message["type"].toString() == MESSAGE_TYPE_STRINGS[MessageType::Hello])
+        return;
+    else if (message["type"].toString() == MESSAGE_TYPE_STRINGS[MessageType::Bye])
+        return;
+    return;
+}
+
+bool DiscoveryService::parseNotifyPacket(QVariantMap msg) // TODO CHANGE TO LIST
 {
-
-    // CHANGE AFTER TEST
-    platform->platformAgents.clear();
-
     AgentInfo ai;
     // qDebug(msg);
-    QJsonDocument doc = QJsonDocument::fromBinaryData(msg);
-    QVariantMap message = doc.object().toVariantMap();
+
+    QVariantMap message = msg;
     QVariantMap::const_iterator it = message.constBegin();
     while(it != message.constEnd()){
-        QVariantMap aiMap = it.value().toMap();
-        ai.desription.name = aiMap[NAME].toString();
-        if (platform->platformAgents.contains(ai.desription.name)){
+        if (it.key() == "gwAgents"){
+            foreach(QVariant agent, it.value().toList()){
+                if (!platform->gatewayAgents.contains(agent.toString())){
+                    platform->gatewayAgents.append(agent.toString());
+                }
+            }
             ++it;
             continue;
+        } else if (it.key() == "type"){
+            ++it;
+            continue;
+        } else {
+            QVariantMap aiMap = it.value().toMap();
+            ai.desription.name = aiMap[NAME].toString();
+            if (platform->platformAgents.contains(ai.desription.name)){
+                ++it;
+                continue;
+            }
+            QVariantMap tmpMap = aiMap[TRANSPORT_ADDRESSES].toMap();
+            for (QVariantMap::const_iterator it2 = tmpMap.constBegin(); it2 != tmpMap.constEnd(); ++it2){
+                QVariantMap tmpMap2 = it2.value().toMap();
+                TransportAddressProperties props;
+                props.metric = tmpMap2[METRIC].toInt();
+                props.validUntil = QTime::fromString(tmpMap2[VALID_UNTIL].toString());
+                props.sourceDs = this;
+                ai.transportAddresses[it2.key()] = props;
+            }
+            ai.desription.services = aiMap[SERVICES].toStringList();
+            ai.desription.flags = aiMap[FLAGS].toStringList();
+
+            ++it;
         }
-        QVariantMap tmpMap = aiMap[TRANSPORT_ADDRESSES].toMap();
-        for (QVariantMap::const_iterator it2 = tmpMap.constBegin(); it2 != tmpMap.constEnd(); ++it2){
-            QVariantMap tmpMap2 = it2.value().toMap();
-            TransportAddressProperties props;
-            props.metric = tmpMap2[METRIC].toInt();
-            props.validUntil = QTime::fromString(tmpMap2[VALID_UNTIL].toString());
-            props.sourceDs = this;
-            ai.transportAddresses[it2.key()] = props;
-        }
-        ai.desription.services = aiMap[SERVICES].toStringList();
-        ai.desription.flags = aiMap[FLAGS].toStringList();
-
-        ++it;
-
-
-
     }
     return true;
 }
 
 void DiscoveryService::sendMulticastNotifyPacket()
 {
-    //change
+    if (platform->platformAgents.empty() && platform->forwardedAgents.empty() && platform->gatewayAgents.empty())
+        return;
 
     QVariantMap agentInfo;
     QVariantMap agent;
@@ -118,11 +186,10 @@ void DiscoveryService::sendMulticastNotifyPacket()
     QHash<QString, AgentInfo>::const_iterator it;
 
     for (it = platform->platformAgents.constBegin(); it != platform->platformAgents.constEnd(); ++it){
-        qDebug() << it.key();
         QVariantMap addresses;
         QHash<QString, TransportAddressProperties>::const_iterator it2 = it.value().transportAddresses.constBegin();
         while (it2 != it.value().transportAddresses.constEnd()){
-            addresses[it2.key()] = fromProperties(it2.value()).toVariantMap();
+            addresses[it2.key()] = fromProperties(it2.value(), true).toVariantMap();
             ++it2;
         }
         if (addresses.empty())
@@ -136,13 +203,14 @@ void DiscoveryService::sendMulticastNotifyPacket()
 
     // ADD GW INFO && forwardedAgents if GW
 
-    if (platform->gateway)
+    if (platform->gateway){
+
         for (it = platform->forwardedAgents.constBegin(); it != platform->forwardedAgents.constEnd(); ++it){
             QVariantMap addresses;
             QHash<QString, TransportAddressProperties>::const_iterator it2 = it.value().transportAddresses.constBegin();
             while (it2 != it.value().transportAddresses.constEnd()){
                 if (it2.value().sourceDs != this)
-                    addresses[MY_ADDRESS + "/routedAgents"] = fromProperties(it2.value()).toVariantMap();
+                    addresses[MY_ADDRESS + "/routedAgents"] = fromProperties(it2.value(), false).toVariantMap();
                 ++it2;
             }
             if (addresses.empty())
@@ -154,12 +222,30 @@ void DiscoveryService::sendMulticastNotifyPacket()
             agentInfo[it.value().desription.name] = agent;
         }
 
+        QVariantList gwAgents;
+        foreach (QString agent, platform->gatewayAgents)
+            gwAgents.append(QVariant(agent));
+        if (!gwAgents.empty())
+            agentInfo["gwAgents"] = gwAgents;
+        agentInfo["type"] = "notify";
+    }
+
     QJsonDocument doc;
     doc.setObject(QJsonObject::fromVariantMap(agentInfo));
-    qDebug() << doc.toJson();
+    //qDebug() << doc.toJson();
+    qDebug() << "================================" << "Local" << number << "================================";
+    number++;
 
     udpSocket->writeDatagram(doc.toBinaryData(), QHostAddress(MULTICAST_ADDRESS), MULTICAST_PORT);
+}
 
+void DiscoveryService::writeStatusMessage(QString type){
+    QVariantMap msg;
+    msg["type"] = QVariant(type);
+    msg["address"] = QVariant(MY_ADDRESS);
+    QJsonDocument doc;
+    doc.setObject(QJsonObject::fromVariantMap(msg));
+    udpSocket->writeDatagram(doc.toBinaryData(), QHostAddress(MULTICAST_ADDRESS), MULTICAST_PORT);
 }
 
 // ///////////////////////////////////////////////////////// MESSAGE TRANSPORT SERVICE /////////////////////////////////////////////////////////
@@ -186,9 +272,9 @@ void MessageTransportService::handleRequest(Tufao::HttpServerRequest &request, T
     connect (&request , SIGNAL(end()), this, SLOT(processHttpMessage()));
     qDebug() << "my address: " << request.socket().localAddress().toString();
     qDebug() << "peer address: " << request.socket().peerAddress().toString();
-    response.writeHead(Tufao::HttpResponseStatus::NO_RESPONSE);
+    response.writeHead(Tufao::HttpResponseStatus::OK);
     response.headers().replace("Content-Type", "text/plain");
-    response.end(":(");
+    response.end(":)");
 }
 
 inline void inserAgents(QXmlStreamWriter *writer, AgentInfo info, bool forwarded){
@@ -233,26 +319,42 @@ void MessageTransportService::writeHttpNotify(){
 
     qDebug() << "PISEM SPRAVU";
 
+    if (platform->platformAgents.empty() && platform->forwardedAgents.empty() && platform->gatewayAgents.empty())
+        //if all agents empty, no need to notify Notify when only gw not empty?
+        return;
+
     writer->writeStartDocument();
-    writer->writeStartElement("agents");
+    writer->writeStartElement("notifyInfo");
+    if (!platform->platformAgents.empty() || !platform->forwardedAgents.empty()){
+        writer->writeStartElement("agents");
 
-    foreach(AgentInfo info, platform->platformAgents)
-        inserAgents(writer, info, false);
+        foreach(AgentInfo info, platform->platformAgents)
+            inserAgents(writer, info, false);
 
-    foreach(AgentInfo info, platform->forwardedAgents)
-        inserAgents(writer, info, true);
+        foreach(AgentInfo info, platform->forwardedAgents)
+            inserAgents(writer, info, true);
+
+        writer->writeEndElement(); //agents
+    }
 
 
+    if (!platform->gatewayAgents.empty()){
+        writer->writeStartElement("GWInfo");
 
-    writer->writeEndElement(); //agents
+        foreach(QString agent, platform->gatewayAgents)
+            writer->writeTextElement("GWAgent", agent);
+
+        writer->writeEndElement(); // GWInfo
+    }
+    writer->writeEndElement(); //notifyInfo
     writer->writeEndDocument();
 
-    qDebug() << data;
+    //qDebug() << data;
 
     QHash<QString, QString> recipients;
     foreach(QString address, platform->gatewayAgents)
         recipients[address] = address;
-    qDebug() << recipients.keys();
+    //qDebug() << recipients.keys();
 
     writeHttpMessage(recipients  //GW agents
                      ,MY_ADDRESS, data, MessageType::Notify);//prehod na spravne miesto
@@ -264,6 +366,7 @@ void MessageTransportService::writeHttpMessage(const QHash<QString, QString> rec
     QHash<QString, QString> rec = recipients;
     QString currentURL = "";
     QHash<QString, QString>::const_iterator it = rec.constBegin();
+
     if (rec.empty() || sender.isEmpty() || msg.isEmpty())
         return;
 
@@ -313,7 +416,7 @@ void MessageTransportService::writeHttpMessage(const QHash<QString, QString> rec
             sendHttp(data, currentURL, type);
         } else {
             foreach(QString address, recipients.values())
-               sendHttp(data, address, type);
+                sendHttp(data, address, type);
             return;
         }
         //qDebug() << currentURL;
@@ -364,18 +467,16 @@ void MessageTransportService::processXmlNotify(QByteArray data){
                 for(int i = 0; i < peData.childNodes().count(); ++i){
                     info.desription.flags << peData.childNodes().at(i).toElement().text();
                 }
-            }else if(tagNam == TRANSPORT_ADDRESSES) {
-                QDomNodeList taNodeList = peData.childNodes();
+            }else if(tagNam == "routes") {
+                QDomNodeList taNodeList = peData.toElement().childNodes();
                 for (int i = 0; i < taNodeList.length(); ++i){
-                    QDomNode node = taNodeList.item(i).toElement().firstChild();
-                    if (node.toElement().tagName() == URL && node.nextSibling().toElement().tagName() == METRIC)
-                        info.transportAddresses[node.toElement().text()].metric = node.nextSibling().toElement().text().toInt();
-                }
-
-            }else if(tagNam == VALID_UNTIL) {
-                for(QHash<QString, TransportAddressProperties>::iterator it = info.transportAddresses.begin();
-                    it != info.transportAddresses.end(); ++it){
-                    it.value().validUntil = QTime::fromString(peData.text());
+                    QDomNode metricNode = taNodeList.item(i).toElement().firstChild();
+                    QDomNode validUntilNode = metricNode.nextSibling();
+                    QDomNode addressNode = validUntilNode.nextSibling();
+                    if (metricNode.toElement().tagName() == METRIC && validUntilNode.toElement().tagName() == VALID_UNTIL
+                            && addressNode.toElement().tagName() == "transportAddress")
+                        info.transportAddresses[addressNode.toElement().text()].metric = metricNode.toElement().text().toInt();
+                    info.transportAddresses[addressNode.toElement().text()].validUntil = QTime::fromString(validUntilNode.toElement().text());
                 }
             }
 
@@ -383,6 +484,12 @@ void MessageTransportService::processXmlNotify(QByteArray data){
         }
 
         agents[info.desription.name] = info;
+
+        nodeList = element.elementsByTagName("GWAgent");
+        for (int i = 0; i < nodeList.count(); ++i){
+            if (!platform->gatewayAgents.contains(nodeList.at(i).toElement().text()))
+                platform->gatewayAgents.append(nodeList.at(i).toElement().text());
+        }
     }
 }
 
@@ -390,7 +497,7 @@ void MessageTransportService::processXmlNotify(QByteArray data){
 
 void MessageTransportService::processHttpMessage(){
 
-    // if notify, don't forward
+
     QByteArray data = m_request->readBody();
     qDebug() << data;
     QDomDocument doc;
@@ -409,7 +516,15 @@ void MessageTransportService::processHttpMessage(){
     node = element.namedItem("message");
     msg = node.toElement().firstChild().toCDATASection().nodeValue().toUtf8();
 
+    QString sender;
+
+    node = element.namedItem("sender");
+    sender = node.toElement().text();
+
+    // if notify, don't forward
     if (type == MessageType::Notify){
+        if (!platform->gatewayAgents.contains(sender))
+            platform->gatewayAgents.append(sender);
         processXmlNotify(msg);
         return;
     }
@@ -429,12 +544,6 @@ void MessageTransportService::processHttpMessage(){
 
     qDebug() << "My agents: " << myAgents;
     qDebug() << "Remote agents: " << forwardAgents;
-
-    QString sender;
-
-
-    node = element.namedItem("sender");
-    sender = node.toElement().text();
 
 
     QHash<QString, QString> recipients;
@@ -468,26 +577,30 @@ Platform::Platform(QObject *parent)
     , mts(this)
     , ds(this)
 {
+    ds.loadGWfromFile();
     validationTimer = new QTimer(this);
     validationTimer->setInterval(5000);
     validationTimer->setSingleShot(false);
+    validationTimer->start();
 
     localNetworkNotificationTimer = new QTimer(this);
     localNetworkNotificationTimer->setInterval(10000);
     localNetworkNotificationTimer->setSingleShot(false);
+    localNetworkNotificationTimer->start();
 
     forwardedAgentsNotificationTimer = new QTimer(this);
-    forwardedAgentsNotificationTimer->setInterval(600000);
-    localNetworkNotificationTimer->setSingleShot(false);
+    forwardedAgentsNotificationTimer->setInterval(60000);
+    forwardedAgentsNotificationTimer->setSingleShot(false);
+    forwardedAgentsNotificationTimer->start();
 
 
     //VALIDATIONTIME CONNECTION
     connect(validationTimer, SIGNAL(timeout()), this, SLOT(eraseInvalidTransportAddresses()));
+    connect(localNetworkNotificationTimer, SIGNAL(timeout()), &ds, SLOT(sendMulticastNotifyPacket()));
+    connect(forwardedAgentsNotificationTimer, SIGNAL(timeout()), &mts, SLOT(writeHttpNotify()));
 
     //MTS CONNECTIONS
     connect(&mts, SIGNAL(messageReady(QStringList,QByteArray)), this, SLOT(handleAgentMessage(QStringList,QByteArray)));
-
-    ds.sendMulticastNotifyPacket();
 }
 
 void Platform::handleAgentMessage(QStringList recipients, QByteArray msg){
@@ -503,7 +616,7 @@ void Platform::eraseInvalidTransportAddresses(){
         QHash<QString, TransportAddressProperties>::iterator it2 = it.value().transportAddresses.begin();
         while (it2 != it.value().transportAddresses.end()){
             if (it2.value().validUntil < QTime::currentTime()){
-                it.value().transportAddresses.erase(it2);
+                it.value().transportAddresses.remove(it2.key());
             } else {
                 ++it2;
             }

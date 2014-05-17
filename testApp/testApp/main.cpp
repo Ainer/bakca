@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     ahoj.desription.services << "0" << "1" << "1";
 
     props.metric = 3;
-    props.validUntil = QTime::currentTime().addSecs(10);
+    props.validUntil = QTime::currentTime().addSecs(30);
     //props.sourceDs = &platform.ds;
     ahoj.transportAddresses["http://127.0.0.1:22222/filip"] = props;
     props.sourceDs = nullptr;
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     ahoj.transportAddresses.clear();
 
     props.metric = 5;
-    props.validUntil = QTime::currentTime().addSecs(11);
+    props.validUntil = QTime::currentTime().addSecs(30);
     props.sourceDs = &platform.ds;
 
     ahoj.desription.name = "magda";
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     hash.insert("filip", "http://127.0.0.1:22222");
 
     platform.gatewayAgents << "http://127.0.0.1:22222" << "http://158.195.212.98:22222";
-
+    platform.ds.saveGWtoFile();
     //platform.mts.writeHttpMessage(hash, "Adko", "Toto je message");
 
 
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     ahoj.transportAddresses.clear();
 
     props.metric = 2;
-    props.validUntil = QTime::currentTime().addSecs(15);
+    props.validUntil = QTime::currentTime().addSecs(180);
 
     ahoj.desription.name = "roman";
     ahoj.desription.flags << "ano" << "ano";
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     ahoj.transportAddresses.clear();
 
     props.metric = 4;
-    props.validUntil = QTime::currentTime().addSecs(22);
+    props.validUntil = QTime::currentTime().addSecs(180);
 
     ahoj.desription.name = "jaroslav";
     ahoj.desription.flags << "ano" << "ano";
@@ -93,6 +93,6 @@ int main(int argc, char *argv[])
     platform.forwardedAgents = agents;
 
     platform.mts.writeHttpNotify();
-
+    platform.ds.sendMulticastNotifyPacket();
     return a.exec();
 }

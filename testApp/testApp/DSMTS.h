@@ -12,9 +12,9 @@
 
 
 enum MessageType{
-    Notify, StandardMessage, Bye
+    Notify, StandardMessage, Hello, Bye
 };
-const QStringList MESSAGE_TYPE_STRINGS = {"notify", "standardMessage", "Bye", "'Sup"};
+const QStringList MESSAGE_TYPE_STRINGS = {"notify", "standardMessage", "Hello", "Bye"};
 
 class Platform;
 
@@ -101,16 +101,25 @@ private:
     Platform *platform;
     QUdpSocket *udpSocket;
     QHostAddress groupAddress;
+    void handleDatagram(QByteArray data);
+    void writeStatusMessage(QString type);
+
+
 public:
     DiscoveryService(Platform *platform);
-    bool parseNotifyPacket(QByteArray msg);
-    void sendMulticastNotifyPacket();
+    ~DiscoveryService();
+    bool parseNotifyPacket(QVariantMap msg);
+    bool saveGWtoFile();
+    bool loadGWfromFile();
+
 
 signals:
     void forwardedAgentsUpdated(QHash<QString, AgentInfo>);
 
 private slots:
     void processPendingDatagrams();
+public slots:
+    void sendMulticastNotifyPacket();
 
 
 
@@ -132,16 +141,16 @@ public:
     //TcpClient tcpClient;
     //TcpServer tcpServer;
     MessageTransportService(Platform *platform);
-    void writeHttpNotify();
     void writeHttpMessage(const QHash<QString, QString> recipients, const QString sender, QByteArray msg, MessageType type);
 
 private slots:
     void handleRequest(Tufao::HttpServerRequest &request,
                        Tufao::HttpServerResponse &response);
     void processHttpMessage();
+public slots:
+    void writeHttpNotify();
 
 signals:
-    void needAgentList();
     void messageReady(QStringList, QByteArray);
     void notifyMessageReady(QByteArray);
 
@@ -162,7 +171,7 @@ public:
     Platform(QObject *parent = 0);
     QHash<QString, AgentInfo> platformAgents;
     QHash<QString, AgentInfo> forwardedAgents;
-    QList<QString> gatewayAgents;
+    QStringList gatewayAgents;
 
 private slots:
     void handleAgentMessage(QStringList recipients, QByteArray msg);
