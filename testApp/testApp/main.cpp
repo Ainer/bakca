@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     AgentInfo ahoj;
 
     ahoj.desription.name = "filip";
-    ahoj.desription.flags << "nie" << "ano" << "nie";
+   // ahoj.desription.flags << "nie" << "ano" << "nie";
     ahoj.desription.services << "0" << "1" << "1";
 
     props.metric = 3;
@@ -40,7 +40,8 @@ int main(int argc, char *argv[])
 
     props.metric = 5;
     props.validUntil = QTime::currentTime().addSecs(30);
-    props.sourceDs = &platform.ds;
+    props.sourceDs = &platform.m_ds;
+    props.route << "http://127.0.0.1:22222" << "http://128.0.0.1:22452";
 
     ahoj.desription.name = "magda";
     ahoj.desription.flags << "GW" << "ano" << "ano";
@@ -51,9 +52,9 @@ int main(int argc, char *argv[])
     toBeNotified.append(ahoj);
 
 
-    platform.platformAgents = agents;
+    platform.m_platformAgents = agents;
 
-    platform.ds.sendMulticastNotifyPacket();
+    platform.m_ds.sendMulticastNotifyPacket();
 
 
 
@@ -62,8 +63,8 @@ int main(int argc, char *argv[])
     hash.insert("jaroslav", "http://127.0.0.1:22222");
     hash.insert("filip", "http://127.0.0.1:22222");
 
-    platform.gatewayAgents << "http://127.0.0.1:22222" << "http://158.195.212.98:22222";
-    platform.ds.saveGWtoFile();
+    platform.m_gatewayAgents << "http://127.0.0.1:22222" << "http://158.195.212.98:22222";
+    platform.m_ds.saveGWtoFile();
     //platform.mts.writeHttpMessage(hash, "Adko", "Toto je message");
 
 
@@ -90,9 +91,9 @@ int main(int argc, char *argv[])
     ahoj.transportAddresses[QString("http://nie.sk")] = props;
     agents.insert(ahoj.desription.name, ahoj);
 
-    platform.forwardedAgents = agents;
+    platform.m_forwardedAgents = agents;
 
-    platform.mts.writeHttpNotify();
-    platform.ds.sendMulticastNotifyPacket();
+    platform.m_mts.writeHttpNotify();
+    platform.m_ds.sendMulticastNotifyPacket();
     return a.exec();
 }
