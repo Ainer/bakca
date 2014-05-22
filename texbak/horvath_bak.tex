@@ -12,6 +12,7 @@
  
 \usepackage{enumerate}
 \parindent=0pt
+\pretolerance=10000
 
 \renewcommand{\arraystretch}{1.5}
 
@@ -122,15 +123,23 @@ Agent je podľa nich zložený z architektúry a agentového programu, ktorého 
 	\item
 	Učenlivý agent
 \end{itemize}
-\subsection{Simple reflex agent} 
+\newpage
+\subsection{\textit{Simple reflex agent}} 
 	Tento druh agenta je úplne najjednoduchší. Reaguje totiž len na aktuálny stav jeho prostredia a pritom si neuchováva žiadnu históriu stavov daného prostredia. Tento agent je plne úspešný iba v úplne pozorovateľnom prostredí. Keď sa jedná o čiastočne pozorovateľné prostredie, vo väčšine je tento agent v nekonečnom cykle a jeho správanie je väčšinou podmienené. Ak je splnená podmienka, tak na ňu programovo reaguje (viď Obr. ~\ref{fig:lifecycle}). 
 
 \begin{figure}[h!]
 \centering
-  \includegraphics{lifecycle}
   \caption{Diagram cyklu jednoduchého reflexného agenta v čiastočne pozorovateľnom prostredí}
   \label{fig:lifecycle}
+  \includegraphics{lifecycle}
 \end{figure}
+
+\subsection{\textit{Model-based agent}}
+Na rozdiel od jednoduchého reflexného agenta, je v tomto type agenta uložená štruktúra, ktorá má reprezentovať súčasný stav jeho sveta. Ten je ovplyvnený históriou vnímania. Podľa zmien je schopný naučiť sa „ako svet funguje“ a teda je schopný čiastočne zachytiť aj stránky sveta, ktoré nie je schopný vnímať. Táto skutočnosť má za následok, že model-based agent je úspešný aj v čiastočne pozorovateľnom prostredí. Jeho reakcie na stav sveta vyberá ako jednoduchý reflexný agent.
+\newline
+\subsection{\textit{Goal base agent}}
+Jeho základ je v podstate rovnaký ako model-based agenta, je však rozšírený o informáciu o jeho cieli. Táto informácia v sebe zahŕňa popis požadovaných situácií a stavu sveta. Vďaka tomu je goal-based agent schopný z viacerých možností vybrať takú, ktorá ho dostane alebo priblíži k požadovanému stavu. Ako vybrať správnu reakciu je otázka plánovania a prehľadávania. Sú to poddisciplíny umelej inteligencie. Niekedy je tento agent menej efektívny, ale za to je viac flexibilný, pretože jeho cieľ je udaný explicitne a dá sa meniť.
+\newline
 
 
 \end{document}

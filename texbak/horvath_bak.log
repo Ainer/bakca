@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2014.5.21)  22 MAY 2014 19:00
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2014.5.21)  22 MAY 2014 20:53
 entering extended mode
 **horvath_bak.tex
 (C:\Users\Adam\Documents\GitHub\bakca\texbak\horvath_bak.tex
@@ -433,19 +433,19 @@ File: listings.cfg 2014/03/04 1.5c listings configuration
 Package: listings 2014/03/04 1.5c (Carsten Heinz)
 
 (C:\Users\Adam\Documents\GitHub\bakca\texbak\horvath_bak.aux)
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Try loading font information for OT1+ptm on input line 54.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 55.
+LaTeX Font Info:    ... okay on input line 55.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 55.
+LaTeX Font Info:    ... okay on input line 55.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 55.
+LaTeX Font Info:    ... okay on input line 55.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 55.
+LaTeX Font Info:    ... okay on input line 55.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 55.
+LaTeX Font Info:    ... okay on input line 55.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 55.
+LaTeX Font Info:    ... okay on input line 55.
+LaTeX Font Info:    Try loading font information for OT1+ptm on input line 55.
 
 ("C:\Program Files\MiKTeX 2.9\tex\latex\psnfss\ot1ptm.fd"
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
@@ -502,12 +502,12 @@ File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 
 \c@lstlisting=\count112
 LaTeX Font Info:    Font shape `OT1/ptm/bx/sc' in size <17.28> not available
-(Font)              Font shape `OT1/ptm/b/sc' tried instead on input line 70.
+(Font)              Font shape `OT1/ptm/b/sc' tried instead on input line 71.
 [1
 
 {C:/ProgramData/MiKTeX/2.9/pdftex/config/pdftex.map}]
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <24.88> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 84.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 85.
 
 (C:\Users\Adam\Documents\GitHub\bakca\texbak\horvath_bak.toc
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
@@ -547,25 +547,25 @@ LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <7> not available
 ]
 Kapitola 1.
 
-Underfull \hbox (badness 10000) in paragraph at lines 94--97
+Underfull \hbox (badness 1248) in paragraph at lines 95--98
+\OT1/ptm/m/n/12 Napriek tomu, []ze v s[]u[]casnosti existuj[]u multiagentov[]e 
+syst[]emy viac-menej v pozad[]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 95--98
 
  []
 
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <17.28> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 98.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 99.
 
-Underfull \hbox (badness 10000) in paragraph at lines 100--102
+Underfull \hbox (badness 10000) in paragraph at lines 101--103
 
  []
 
 
-Overfull \hbox (17.30612pt too wide) in paragraph at lines 103--105
-\OT1/ptm/m/n/12 pr[]kladom mul-tia-gen-tov[]ych alebo de-cen-tra-li-zo-van[]yc
-h syst[]emov (ka-pi-tola 3). N[]asledne pop[][]seme
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 103--105
+Underfull \hbox (badness 10000) in paragraph at lines 104--106
 
  []
 
@@ -574,45 +574,59 @@ Underfull \hbox (badness 10000) in paragraph at lines 103--105
 ] [2]
 Kapitola 2.
 
-Underfull \hbox (badness 10000) in paragraph at lines 107--109
+Underfull \hbox (badness 10000) in paragraph at lines 108--110
 
  []
 
-LaTeX Font Info:    Try loading font information for OMS+ptm on input line 115.
+LaTeX Font Info:    Try loading font information for OMS+ptm on input line 116.
 
 ("C:\Program Files\MiKTeX 2.9\tex\latex\psnfss\omsptm.fd"
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <12> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 115.
-LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <14.4> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 125.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 116.
  [3
 
 ]
-<lifecycle.png, id=20, 142.131pt x 136.51pt>
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <14.4> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 127.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <14.4> not available
+(Font)              Font shape `OT1/ptm/b/it' tried instead on input line 127.
+
+<lifecycle.png, id=21, 189.508pt x 182.281pt>
 File: lifecycle.png Graphic file (type png)
  <use lifecycle.png>
-Package pdftex.def Info: lifecycle.png used on input line 130.
-(pdftex.def)             Requested size: 142.13063pt x 136.50966pt.
- [4 <C:/Users/Adam/Documents/GitHub/bakca/texbak/lifecycle.png>]
+Package pdftex.def Info: lifecycle.png used on input line 134.
+(pdftex.def)             Requested size: 189.50752pt x 182.28055pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 138--140
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 141--143
+
+ []
+
+[4 <C:/Users/Adam/Documents/GitHub/bakca/texbak/lifecycle.png>]
 (C:\Users\Adam\Documents\GitHub\bakca\texbak\horvath_bak.aux) ) 
 Here is how much of TeX's memory you used:
- 4216 strings out of 493921
- 56867 string characters out of 3147285
+ 4222 strings out of 493921
+ 56931 string characters out of 3147285
  125935 words of memory out of 3000000
- 7445 multiletter control sequences out of 15000+200000
- 29432 words of font info for 55 fonts, out of 3000000 for 9000
+ 7448 multiletter control sequences out of 15000+200000
+ 32197 words of font info for 58 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
  27i,5n,32p,1013b,219s stack positions out of 5000i,500n,10000p,200000b,50000s
 {C:/Program File
 s/MiKTeX 2.9/fonts/enc/dvips/fontname/8r.enc}<C:/Program Files/MiKTeX 2.9/fonts
 /type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/u
-rw/times/utmb8a.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/urw/times/utmr8a.p
-fb>
-Output written on horvath_bak.pdf (6 pages, 57034 bytes).
+rw/times/utmb8a.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/urw/times/utmbi8a.
+pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/urw/times/utmr8a.pfb><C:/Program F
+iles/MiKTeX 2.9/fonts/type1/urw/times/utmri8a.pfb>
+Output written on horvath_bak.pdf (6 pages, 81324 bytes).
 PDF statistics:
- 37 PDF objects out of 1000 (max. 8388607)
+ 45 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  6 words of extra memory for PDF output out of 10000 (max. 10000000)
 
