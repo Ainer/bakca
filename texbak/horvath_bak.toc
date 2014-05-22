@@ -1,0 +1,9 @@
+\select@language {slovak}
+\thispagestyle {empty}
+\contentsline {chapter}{\numberline {1}\IeC {\'U}vod}{1}
+\contentsline {section}{\numberline {1.1}Motivacia}{1}
+\contentsline {section}{\numberline {1.2}Cie\IeC {\v l} pr\IeC {\'a}ce}{1}
+\contentsline {section}{\numberline {1.3}\IeC {\v S}trukt\IeC {\'u}ra pr\IeC {\'a}ce}{1}
+\contentsline {chapter}{\numberline {2}Preh\IeC {\v l}ad}{3}
+\contentsline {section}{\numberline {2.1}Inteligentn\IeC {\'y} agent}{3}
+\contentsline {subsection}{\numberline {2.1.1}Simple reflex agent}{3}
