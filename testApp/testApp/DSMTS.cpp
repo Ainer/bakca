@@ -178,7 +178,7 @@ bool DiscoveryService::parseNotifyPacket(QVariantMap msg) // TODO CHANGE TO LIST
     // qDebug(msg);
 
     QVariantMap message = msg;
-    QVariantMap::const_iterator it = message.constBegin();
+    auto it = message.constBegin();
     while(it != message.constEnd()){
         if (it.key() == "gwAgents"){
             foreach(QVariant agent, it.value().toList()){
@@ -255,6 +255,7 @@ void DiscoveryService::sendMulticastNotifyPacket()
         agent[FLAGS] = QVariant(it.value().desription.flags);
         agent[TRANSPORT_ADDRESSES] =  addresses;
         agentInfo[it.value().desription.name] = agent;
+		//pridaj valid until aj ku forwarded
     }
 
     // ADD GW INFO && m_forwardedAgents if GW

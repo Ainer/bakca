@@ -66,12 +66,7 @@ public:
     ~DiscoveryService();
     bool parseNotifyPacket(QVariantMap msg);
     bool saveGWtoFile();
-    bool loadGWfromFile();
-
-
-signals:
-    void forwardedAgentsUpdated(QHash<QString, AgentInfo>);
-
+	bool loadGWfromFile();
 private slots:
     void processPendingDatagrams();
 public slots:
