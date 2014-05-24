@@ -74,7 +74,7 @@ inline void inserAgents(QXmlStreamWriter *writer, AgentInfo info, QString recipi
     }
     writer->writeEndElement(); //services
 
-    writer->writeStartElement("routes");
+    writer->writeStartElement(TRANSPORT_ADDRESSES);
     for (QHash<QString, TransportAddressProperties>::const_iterator it2 = info.transportAddresses.constBegin();
          it2 != info.transportAddresses.constEnd(); ++it2){
         if (it2.value().route.contains(recipient))
@@ -83,10 +83,10 @@ inline void inserAgents(QXmlStreamWriter *writer, AgentInfo info, QString recipi
         writer->writeTextElement(METRIC, QString::number(it2.value().metric));
         writer->writeTextElement(VALID_UNTIL, it2.value().validUntil.toString());
         writer->writeTextElement("transportAddress", MY_ADDRESS + "/forwardedAgents");
-        writer->writeTextElement("origins", it2.value().route.join(" "));
+        writer->writeTextElement("origins", it2.value().origins.join(" "));
         writer->writeEndElement(); // route
     }
-    writer->writeEndElement(); // routes
+    writer->writeEndElement(); // transportAddresses
     writer->writeEndElement(); //agent
 }
 
@@ -346,7 +346,7 @@ void MessageTransportService::processXmlNotify(QByteArray data, QString sender){
                 for(int i = 0; i < peData.childNodes().count(); ++i){
                     info.desription.flags << peData.childNodes().at(i).toElement().text();
                 }
-            }else if(tagNam == "routes") {
+            }else if(tagNam == TRANSPORT_ADDRESSES) {
                 QDomNodeList taNodeList = peData.toElement().childNodes();
                 for (int i = 0; i < taNodeList.length(); ++i){
                     qDebug() << "route" << i;
@@ -359,8 +359,8 @@ void MessageTransportService::processXmlNotify(QByteArray data, QString sender){
                         info.transportAddresses[addressNode.toElement().text()].validUntil = QTime::fromString(validUntilNode.toElement().text());
                     }
                     QString text = taNodeList.item(i).toElement().namedItem("origins").toElement().text();
-                    info.transportAddresses[addressNode.toElement().text()].route = text.split(' ', QString::SplitBehavior::SkipEmptyParts);
-                    info.transportAddresses[addressNode.toElement().text()].route.append(sender);
+                    info.transportAddresses[addressNode.toElement().text()].origins = text.split(' ', QString::SplitBehavior::SkipEmptyParts);
+                    info.transportAddresses[addressNode.toElement().text()].origins.append(sender);
                     //qDebug() << info.transportAddresses[addressNode.toElement().text()].route;
                 }
             }
@@ -372,7 +372,7 @@ void MessageTransportService::processXmlNotify(QByteArray data, QString sender){
         QHash<QString, TransportAddressProperties>::iterator it = info.transportAddresses.begin();
         bool metricExists = false;
         while (it != info.transportAddresses.end()){
-            if (agents[info.desription.name].transportAddresses[it.key()].route == it.value().route){
+            if (agents[info.desription.name].transportAddresses[it.key()].origins == it.value().origins){
                 agents[info.desription.name].transportAddresses[it.key()] = it.value();
                 metricExists = true;
             }

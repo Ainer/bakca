@@ -25,7 +25,7 @@ public:
     int metric;
     QTime validUntil;
     DiscoveryService *sourceDs;
-    QStringList route;
+    QStringList origins;
 };
 Q_DECLARE_METATYPE(TransportAddressProperties)
 
