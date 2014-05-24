@@ -199,7 +199,7 @@ bool DiscoveryService::parseNotifyPacket(QVariantMap msg) // TODO CHANGE TO LIST
                 continue;
             }
             QVariantMap tmpMap = aiMap[TRANSPORT_ADDRESSES].toMap();
-            for (QVariantMap::const_iterator it2 = tmpMap.constBegin(); it2 != tmpMap.constEnd(); ++it2){
+            for (auto it2 = tmpMap.constBegin(); it2 != tmpMap.constEnd(); ++it2){
                 QVariantMap tmpMap2 = it2.value().toMap();
                 TransportAddressProperties props;
                 props.metric = tmpMap2[METRIC].toInt();
@@ -239,35 +239,30 @@ void DiscoveryService::sendMulticastNotifyPacket()
     QVariantMap agentInfo;
     QVariantMap agent;
 
-    QHash<QString, AgentInfo>::const_iterator it;
-
-    for (it = m_platform->m_platformAgents.constBegin(); it != m_platform->m_platformAgents.constEnd(); ++it){
+    for (auto it = m_platform->m_platformAgents.constBegin(); it != m_platform->m_platformAgents.constEnd(); ++it){
         QVariantMap addresses;
-        QHash<QString, TransportAddressProperties>::const_iterator it2 = it.value().transportAddresses.constBegin();
+        auto it2 = it.value().transportAddresses.constBegin();
         while (it2 != it.value().transportAddresses.constEnd()){
             addresses[it2.key()] = fromProperties(it2.value(), true).toVariantMap();
             ++it2;
         }
-        if (addresses.empty())
+        if (addresses.empty()) //do not announce agents with no new addresses
             continue;
         agent[NAME] = QVariant(it.value().desription.name);
         agent[SERVICES] = QVariant(it.value().desription.services);
         agent[FLAGS] = QVariant(it.value().desription.flags);
         agent[TRANSPORT_ADDRESSES] =  addresses;
         agentInfo[it.value().desription.name] = agent;
-		//pridaj valid until aj ku forwarded
     }
-
-    // ADD GW INFO && m_forwardedAgents if GW
 
     if (m_platform->m_gateway){
 
         for (it = m_platform->m_forwardedAgents.constBegin(); it != m_platform->m_forwardedAgents.constEnd(); ++it){
             QVariantMap addresses;
-            QHash<QString, TransportAddressProperties>::const_iterator it2 = it.value().transportAddresses.constBegin();
+            auto it2 = it.value().transportAddresses.constBegin();
             while (it2 != it.value().transportAddresses.constEnd()){
                 if (it2.value().sourceDs != this)
-                    addresses[MY_ADDRESS + "/routedAgents"] = fromProperties(it2.value(), false).toVariantMap();
+                    addresses[MY_ADDRESS] = fromProperties(it2.value(), false).toVariantMap();
                 ++it2;
             }
             if (addresses.empty())
@@ -369,7 +364,7 @@ void MessageTransportService::processXmlNotify(QByteArray data, QString sender){
         }
         //find existence
         agents[info.desription.name].desription = info.desription;
-        QHash<QString, TransportAddressProperties>::iterator it = info.transportAddresses.begin();
+        auto it = info.transportAddresses.begin();
         bool metricExists = false;
         while (it != info.transportAddresses.end()){
             if (agents[info.desription.name].transportAddresses[it.key()].origins == it.value().origins){
@@ -399,10 +394,6 @@ MessageTransportService::MessageTransportService(Platform *platform)
     connect(&m_server, SIGNAL(requestReady(Tufao::HttpServerRequest&,Tufao::HttpServerResponse&)),
             this,
             SLOT(handleRequest(Tufao::HttpServerRequest&,Tufao::HttpServerResponse&)));
-
-
-    //tcpClient.connectToHost(My_ADDRESS, 1024);
-
 
     m_server.listen(QHostAddress::Any, 22222);
 }
@@ -563,7 +554,7 @@ void MessageTransportService::processHttpMessage(){
         QString url;
         int minMetric = 999;
 
-        for(QHash<QString, TransportAddressProperties>::const_iterator it = m_platform->m_forwardedAgents[agent].transportAddresses.constBegin();
+        for(auto it = m_platform->m_forwardedAgents[agent].transportAddresses.constBegin();
             it != m_platform->m_forwardedAgents[agent].transportAddresses.constEnd(); ++it){
 
             if (it.value().metric < minMetric){
@@ -585,7 +576,7 @@ void MessageTransportService::processHttpMessage(){
 //MESSAGE TRANSPORT SERVICE PUBLIC SLOTS
 
 
-void MessageTransportService::writeHttpNotify(){
+void MessageTransportService::sendHttpNotify(){
 
     QByteArray data;
     QXmlStreamWriter *writer = new QXmlStreamWriter(&data);
@@ -667,8 +658,8 @@ Platform::Platform(QObject *parent)
 
     //MTS CONNECTIONS
     connect(&m_mts, SIGNAL(messageReady(QStringList,QByteArray)), this, SLOT(handleAgentMessage(QStringList,QByteArray)));
-
-    m_mts.sendHttpStatusMessage("hello");
+	//nacitaj gw
+    sendHttpStatusMessage("hello");
 }
 
 void Platform::handleStatusMessage(QString type, QString address){

@@ -58,9 +58,10 @@ class DiscoveryService: public QObject
 private:
     Platform *m_platform;
     QUdpSocket *m_udpSocket;
-    QHostAddress m_groupAddress;
-    void handleDatagram(QByteArray data);
+    QHostAddress m_groupAddress; //odstran a uprav v kode
+    void handleDatagram(QByteArray data); 
     void writeStatusMessage(QString type);
+	void writeStatusMessage()
 public:
     DiscoveryService(Platform *platform);
     ~DiscoveryService();
@@ -81,6 +82,7 @@ private:
     Platform *m_platform;
     Tufao::HttpServer m_server;
     Tufao::HttpServerRequest *m_request;
+	Tufao::HttpServerResponse *m_response;
     void sendHttp(const QByteArray msg, const QString targetAgent);
     void processXmlNotify(QByteArray data, QString sender);
 
@@ -88,7 +90,7 @@ private:
 public:
     MessageTransportService(Platform *platform);
     ~MessageTransportService();
-    void writeHttpMessage(const QHash<QString, QString> recipients, const QString sender, QByteArray msg, MessageType type);
+    void sendHttpMessage(const QHash<QString, QString> recipients, const QString sender, QByteArray msg, MessageType type);
     void sendHttpStatusMessage(QString type);
 
 private slots:
