@@ -75,7 +75,7 @@ inline void inserAgents(QXmlStreamWriter *writer, AgentInfo info, QString recipi
     writer->writeEndElement(); //services
 
     writer->writeStartElement(TRANSPORT_ADDRESSES);
-    for (QHash<QString, TransportAddressProperties>::const_iterator it2 = info.transportAddresses.constBegin();
+    for (auto it2 = info.transportAddresses.constBegin();
          it2 != info.transportAddresses.constEnd(); ++it2){
         if (it2.value().route.contains(recipient))
             continue;
@@ -492,11 +492,13 @@ MessageTransportService::~MessageTransportService(){
 void MessageTransportService::handleRequest(Tufao::HttpServerRequest &request, Tufao::HttpServerResponse &response){
     //TODO PROCESS MSG
     m_request = &request;
+	m_respons = &response;
     connect (&request , SIGNAL(end()), this, SLOT(processHttpMessage()));
     qDebug() << "my address: " << request.socket().localAddress().toString();
     qDebug() << "peer address: " << request.socket().peerAddress().toString();
-    response.writeHead(Tufao::HttpResponseStatus::OK);
-    response.headers().replace("Content-Type", "text/plain");
+
+    response.writeHead(Tufao::HttpResponseStatus::OK);//presun na spravne miesto po spracovani message
+    response.headers().replace("Content-Type", "text/plain"); 
     response.end(":)");
 }
 
@@ -627,7 +629,7 @@ void MessageTransportService::sendHttpNotify(){
                          ,MY_ADDRESS, data, MessageType::Notify);//prehod na spravne miesto
     }
 }
-// ///////////////////////////////////////////////////////// m_platform /////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////// Platform /////////////////////////////////////////////////////////
 //Platform PUBLIC
 Platform::Platform(QObject *parent)
     : QObject(parent)
@@ -658,7 +660,6 @@ Platform::Platform(QObject *parent)
 
     //MTS CONNECTIONS
     connect(&m_mts, SIGNAL(messageReady(QStringList,QByteArray)), this, SLOT(handleAgentMessage(QStringList,QByteArray)));
-	//nacitaj gw
     sendHttpStatusMessage("hello");
 }
 
@@ -670,7 +671,7 @@ void Platform::handleStatusMessage(QString type, QString address){
     } else if (type == "bye"){
         if (m_gatewayAgents.contains(address))
             m_gatewayAgents.removeAll(address);
-        QHash<QString, AgentInfo>::iterator it = m_forwardedAgents.begin();
+        auto it = m_forwardedAgents.begin();
         while (it != m_forwardedAgents.end()){
             QHash<QString, TransportAddressProperties>::iterator it2 = it.value().transportAddresses.begin();
             while (it2 != it.value().transportAddresses.end()){
@@ -696,9 +697,9 @@ void Platform::handleAgentMessage(QStringList recipients, QByteArray msg){
 }
 
 void Platform::eraseInvalidTransportAddresses(){
-    QHash<QString, AgentInfo>::iterator it = m_forwardedAgents.begin();
+    auto it = m_forwardedAgents.begin();
     while (it != m_forwardedAgents.end()){
-        QHash<QString, TransportAddressProperties>::iterator it2 = it.value().transportAddresses.begin();
+        auto it2 = it.value().transportAddresses.begin();
         while (it2 != it.value().transportAddresses.end()){
             if (it2.value().validUntil < QTime::currentTime()){
                 it.value().transportAddresses.remove(it2.key());
