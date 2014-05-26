@@ -493,7 +493,9 @@ void MessageTransportService::handleRequest(Tufao::HttpServerRequest &request, T
     //TODO PROCESS MSG
     m_request = &request;
 	m_respons = &response;
-    connect (&request , SIGNAL(end()), this, SLOT(processHttpMessage()));
+	connect(&request, &HttpServerRequest::end, [](HttpServerRequest &req, HttpServerResponse &resp) {
+		processHttpMessage(req, resp);
+	})
     qDebug() << "my address: " << request.socket().localAddress().toString();
     qDebug() << "peer address: " << request.socket().peerAddress().toString();
 
