@@ -34,10 +34,9 @@ int number = 0;
 inline QJsonObject fromProperties(TransportAddressProperties props, bool isPlatformAgent){
     QJsonObject object;
     QJsonValue value;
-    value = props.metric;
+    value = isPlatformAgent ? 0 : props.metric;
     object.insert(METRIC, value);
-    if (isPlatformAgent)
-        value = QTime::currentTime().addSecs(30).toString();
+	value = isPlatformAgent ? QTime::currentTime().addSecs(30).toString() : props.validUntil;
     object.insert(VALID_UNTIL, value);
 
     return object;
@@ -363,6 +362,8 @@ void MessageTransportService::processXmlNotify(QByteArray data, QString sender){
             pEntries = pEntries.nextSibling();
         }
         //find existence
+
+		//skontroluj, ci neexistuje s metrikou 0, v takom pripade neukladaj
         agents[info.desription.name].desription = info.desription;
         auto it = info.transportAddresses.begin();
         bool metricExists = false;
