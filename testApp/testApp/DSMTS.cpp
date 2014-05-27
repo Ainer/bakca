@@ -100,9 +100,9 @@ void DiscoveryService::handleDatagram(QByteArray data){
     if (message["type"].toString() == MESSAGE_TYPE_STRINGS[MessageType::Notify])
         parseNotifyPacket(message);
     else if (message["type"].toString() == MESSAGE_TYPE_STRINGS[MessageType::Hello])
-        sendMulticastNotifyPacket();
+		m_platform->handleStatusMessage(MessageType::Hello, message["address"].toString(), true);
     else if (message["type"].toString() == MESSAGE_TYPE_STRINGS[MessageType::Bye])
-        m_platform->handleStatusMessage(message["address"].toString());
+		m_platform->handleStatusMessage(MessageType::Bye, message["address"].toString(), true);
     return;
 }
 
@@ -481,7 +481,6 @@ void MessageTransportService::sendHttpStatusMessage(QString type){
     qDebug() << data;
 
     writeHttpMessage(recipients, MY_ADDRESS, data, MessageType::Hello);
-    m_platform->handleStatusMessage(data);
 }
 
 MessageTransportService::~MessageTransportService(){
@@ -535,7 +534,11 @@ void MessageTransportService::processHttpMessage(){
             m_platform->m_gatewayAgents.append(sender);
         processXmlNotify(msg, sender);
         return;
-    }
+	}
+	else if (type == MessageType::Hello || type == MessageType::Bye){
+		m_platform->handleStatusMessage(type, sender, false);
+		return;
+	}
 
 
     node = element.namedItem("recipients");
@@ -666,17 +669,20 @@ Platform::Platform(QObject *parent)
     sendHttpStatusMessage("hello");
 }
 
-void Platform::handleStatusMessage(QString type, QString address){
-    if (type == "hello"){
-        if (!m_gatewayAgents.contains(address))
+void Platform::handleStatusMessage(MessageType type, QString address, bool ds){
+    if (type == MessageType::Hello){
+        if (!m_gatewayAgents.contains(address) && !ds)
             m_gatewayAgents << address;
-        m_mts.writeHttpNotify();
-    } else if (type == "bye"){
+		if (ds)
+			m_ds->sendNotify();
+		else
+			sendHttpNotify(); //upravit
+    } else if (type == MessageType::Bye && !ds){
         if (m_gatewayAgents.contains(address))
             m_gatewayAgents.removeAll(address);
         auto it = m_forwardedAgents.begin();
         while (it != m_forwardedAgents.end()){
-            QHash<QString, TransportAddressProperties>::iterator it2 = it.value().transportAddresses.begin();
+            auto it2 = it.value().transportAddresses.begin();
             while (it2 != it.value().transportAddresses.end()){
                 if (it2.key().contains(address)){
                     it.value().transportAddresses.remove(it2.key());
