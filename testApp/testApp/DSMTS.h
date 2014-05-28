@@ -14,7 +14,7 @@
 enum MessageType{
     Notify, StandardMessage, Hello, Bye
 };
-const QStringList MESSAGE_TYPE_STRINGS = {"notify", "standardMessage", "Hello", "Bye"};
+const QStringList MESSAGE_TYPE_STRINGS = {"notify", "standardMessage", "hello", "bye"};
 
 class Platform;
 
@@ -96,7 +96,7 @@ public:
 private slots:
     void handleRequest(Tufao::HttpServerRequest &request,
                        Tufao::HttpServerResponse &response);
-    void processHttpMessage(Tufao::HttpServerRequest request, Tufao::HttpServerResponse response);
+    void processHttpMessage(Tufao::HttpServerRequest &request, Tufao::HttpServerResponse &response);
 public slots:
     void writeHttpNotify();
 

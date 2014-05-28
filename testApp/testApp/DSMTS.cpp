@@ -23,12 +23,6 @@ const QString VALID_UNTIL = "validUntil";
 int number = 0;
 
 
-
-
-//TODO
-//HELLO/BYE message on startup and finish and handling +handling
-
-
 //INLINE METHODS
 
 inline QJsonObject fromProperties(TransportAddressProperties props, bool isPlatformAgent){
@@ -130,11 +124,11 @@ DiscoveryService::DiscoveryService(Platform *platform)
 
     connect(m_udpSocket, SIGNAL(readyRead()),
             this, SLOT(processPendingDatagrams()));
-    writeStatusMessage("Hello");
+    writeStatusMessage("hello");
     //sendMulticastNotifyPacket();
 }
 DiscoveryService::~DiscoveryService(){
-    writeStatusMessage("Bye");
+    writeStatusMessage("bye");
 }
 
 bool DiscoveryService::saveGWtoFile(){
@@ -321,6 +315,7 @@ void MessageTransportService::processXmlNotify(QByteArray data, QString sender){
     for(int ii = 0;ii < nodeList.count(); ii++)
     {
         AgentInfo info;
+        bool isLocal = false;
 
         // get the current one as QDomElement
         QDomElement el = nodeList.at(ii).toElement();
@@ -364,6 +359,11 @@ void MessageTransportService::processXmlNotify(QByteArray data, QString sender){
         //find existence
 
 		//skontroluj, ci neexistuje s metrikou 0, v takom pripade neukladaj
+        foreach(TransportAddressProperties props, agents[info.desription.name].transportAddresses.values())
+            if (props.metric == 0)
+                isLocal = true;
+        if (isLocal)
+            continue;
         agents[info.desription.name].desription = info.desription;
         auto it = info.transportAddresses.begin();
         bool metricExists = false;
@@ -491,20 +491,19 @@ MessageTransportService::~MessageTransportService(){
 
 void MessageTransportService::handleRequest(Tufao::HttpServerRequest &request, Tufao::HttpServerResponse &response){
     //TODO PROCESS MSG
-    m_request = &request;
-    m_response = &response;
 
     qDebug() << "my address: " << request.socket().localAddress().toString();
     qDebug() << "peer address: " << request.socket().peerAddress().toString();
 
-    response.writeHead(Tufao::HttpResponseStatus::OK);//presun na spravne miesto po spracovani message
-    response.headers().replace("Content-Type", "text/plain"); 
-    response.end(":)");
+    connect(&request, &Tufao::HttpServerRequest::end,
+    this, [this,&request, &response]() {
+    processHttpMessage(request, response);
+    });
 }
 
-void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest request, Tufao::HttpServerResponse response){
-    QByteArray data = m_request->readBody();
-    // qDebug() << data;
+void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest &request, Tufao::HttpServerResponse &response){
+    QByteArray data = request.readBody();
+    qDebug() << data;
     QDomDocument doc;
     QStringList myAgents;
     QStringList forwardAgents;
@@ -531,10 +530,16 @@ void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest reques
         if (!m_platform->m_gatewayAgents.contains(sender))
             m_platform->m_gatewayAgents.append(sender);
         processXmlNotify(msg, sender);
+        response.writeHead(Tufao::HttpResponseStatus::OK);//presun na spravne miesto po spracovani message
+        response.headers().replace("Content-Type", "text/plain");
+        response.end(":)");
         return;
 	}
 	else if (type == MessageType::Hello || type == MessageType::Bye){
 		m_platform->handleStatusMessage(type, sender, false);
+        response.writeHead(Tufao::HttpResponseStatus::OK);//presun na spravne miesto po spracovani message
+        response.headers().replace("Content-Type", "text/plain");
+        response.end(":)");
 		return;
 	}
 
@@ -573,6 +578,9 @@ void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest reques
         minMetric = 999;
     }
     writeHttpMessage(recipients, sender, msg, type);
+    response.writeHead(Tufao::HttpResponseStatus::OK);//presun na spravne miesto po spracovani message
+    response.headers().replace("Content-Type", "text/plain");
+    response.end(":)");
 
     if (type == MessageType::StandardMessage)
         emit messageReady(myAgents, msg);

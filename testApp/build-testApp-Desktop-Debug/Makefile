@@ -14,10 +14,10 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DTUFAO_VERSION_MAJOR=1 -DQT_QML_DEBUG -DQT_DECLARATIVE_DEBUG -DQT_WIDGETS_LIB -DQT_XML_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
 CFLAGS        = -m64 -pipe -g -Wall -W -D_REENTRANT -fPIE $(DEFINES)
-CXXFLAGS      = -m64 -pipe -g -std=c++0x -Wall -W -D_REENTRANT -fPIE $(DEFINES)
+CXXFLAGS      = -m64 -pipe -I${HOME}/src/tufao/run/include/tufao-1 -g -std=c++0x -Wall -W -D_REENTRANT -fPIE $(DEFINES)
 INCPATH       = -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I../testApp -I/usr/include/tufao-1 -I/usr/include/qt5 -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtXml -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtNetwork -I/usr/include/qt5/QtCore -I. -I.
 LINK          = g++
-LFLAGS        = -m64
+LFLAGS        = -m64 -L${HOME}/src/tufao/run/lib
 LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -L/usr/lib -ltufao1 -lQt5Widgets -L/usr/lib/x86_64-linux-gnu -lQt5Xml -lQt5Gui -lQt5Network -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 
@@ -596,6 +596,7 @@ moc_DSMTS.cpp: /usr/include/qt5/QtNetwork/QtNetwork \
 		/usr/include/tufao-1/Tufao/HttpServerResponse \
 		/usr/include/tufao-1/Tufao/AbstractHttpServerRequestHandler \
 		/usr/include/tufao-1/Tufao/abstracthttpserverrequesthandler.h \
+		/usr/include/qt5/QtNetwork/QNetworkReply \
 		../testApp/DSMTS.h
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) $(INCPATH) -I/usr/include/c++/4.8 -I/usr/include/x86_64-linux-gnu/c++/4.8 -I/usr/include/c++/4.8/backward -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../testApp/DSMTS.h -o moc_DSMTS.cpp
 
@@ -895,7 +896,8 @@ main.o: ../testApp/main.cpp /usr/include/qt5/QtCore/QCoreApplication \
 		/usr/include/qt5/QtGui/qtouchdevice.h \
 		/usr/include/tufao-1/Tufao/HttpServerResponse \
 		/usr/include/tufao-1/Tufao/AbstractHttpServerRequestHandler \
-		/usr/include/tufao-1/Tufao/abstracthttpserverrequesthandler.h
+		/usr/include/tufao-1/Tufao/abstracthttpserverrequesthandler.h \
+		/usr/include/qt5/QtNetwork/QNetworkReply
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../testApp/main.cpp
 
 DSMTS.o: ../testApp/DSMTS.cpp /usr/include/qt5/QtNetwork/QtNetwork \
@@ -1145,6 +1147,7 @@ DSMTS.o: ../testApp/DSMTS.cpp /usr/include/qt5/QtNetwork/QtNetwork \
 		/usr/include/qt5/QtXml/QDomDocument \
 		/usr/include/qt5/QtXml/qdom.h \
 		/usr/include/qt5/QtXml/qtxmlglobal.h \
+		/usr/include/qt5/QtNetwork/QNetworkReply \
 		../testApp/DSMTS.h \
 		/usr/include/qt5/QtWidgets/QDialog \
 		/usr/include/qt5/QtWidgets/qdialog.h \

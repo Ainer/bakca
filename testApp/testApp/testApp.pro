@@ -21,3 +21,5 @@ SOURCES += main.cpp \
 
 HEADERS += \
     DSMTS.h
+QMAKE_LFLAGS += -L${HOME}/src/tufao/run/lib
+QMAKE_CXXFLAGS += -I${HOME}/src/tufao/run/include/tufao-1
