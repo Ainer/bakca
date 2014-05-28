@@ -36,7 +36,7 @@ inline QJsonObject fromProperties(TransportAddressProperties props, bool isPlatf
     QJsonValue value;
     value = isPlatformAgent ? 0 : props.metric;
     object.insert(METRIC, value);
-	value = isPlatformAgent ? QTime::currentTime().addSecs(30).toString() : props.validUntil;
+    value = isPlatformAgent ? QTime::currentTime().addSecs(30).toString() : props.validUntil.toString();
     object.insert(VALID_UNTIL, value);
 
     return object;
@@ -76,7 +76,7 @@ inline void inserAgents(QXmlStreamWriter *writer, AgentInfo info, QString recipi
     writer->writeStartElement(TRANSPORT_ADDRESSES);
     for (auto it2 = info.transportAddresses.constBegin();
          it2 != info.transportAddresses.constEnd(); ++it2){
-        if (it2.value().route.contains(recipient))
+        if (it2.value().origins.contains(recipient))
             continue;
         writer->writeStartElement("route");
         writer->writeTextElement(METRIC, QString::number(it2.value().metric));
@@ -256,7 +256,7 @@ void DiscoveryService::sendMulticastNotifyPacket()
 
     if (m_platform->m_gateway){
 
-        for (it = m_platform->m_forwardedAgents.constBegin(); it != m_platform->m_forwardedAgents.constEnd(); ++it){
+        for (auto it = m_platform->m_forwardedAgents.constBegin(); it != m_platform->m_forwardedAgents.constEnd(); ++it){
             QVariantMap addresses;
             auto it2 = it.value().transportAddresses.constBegin();
             while (it2 != it.value().transportAddresses.constEnd()){
@@ -462,7 +462,7 @@ void MessageTransportService::writeHttpMessage(const QHash<QString, QString> rec
     }
 }
 
-void MessageTransportService::sendHttpStatusMessage(QString type){
+void MessageTransportService::writeHttpStatusMessage(QString type){
     if (!m_platform->m_gateway)
         return;
     QByteArray data;
@@ -484,7 +484,7 @@ void MessageTransportService::sendHttpStatusMessage(QString type){
 }
 
 MessageTransportService::~MessageTransportService(){
-    sendHttpStatusMessage("bye");
+    writeHttpStatusMessage("bye");
 }
 
 //MESSAGE TRANSPORT SERVICE PRIVATE SLOTS
@@ -492,10 +492,10 @@ MessageTransportService::~MessageTransportService(){
 void MessageTransportService::handleRequest(Tufao::HttpServerRequest &request, Tufao::HttpServerResponse &response){
     //TODO PROCESS MSG
     m_request = &request;
-	m_respons = &response;
-	connect(&request, &HttpServerRequest::end, [](HttpServerRequest &req, HttpServerResponse &resp) {
+    m_response = &response;
+    connect(&request, &Tufao::HttpServerRequest::end, [=](Tufao::HttpServerRequest &req, Tufao::HttpServerResponse &resp) {
 		processHttpMessage(req, resp);
-	})
+    });
     qDebug() << "my address: " << request.socket().localAddress().toString();
     qDebug() << "peer address: " << request.socket().peerAddress().toString();
 
@@ -504,7 +504,7 @@ void MessageTransportService::handleRequest(Tufao::HttpServerRequest &request, T
     response.end(":)");
 }
 
-void MessageTransportService::processHttpMessage(){
+void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest request, Tufao::HttpServerResponse response){
     QByteArray data = m_request->readBody();
     // qDebug() << data;
     QDomDocument doc;
@@ -584,7 +584,7 @@ void MessageTransportService::processHttpMessage(){
 //MESSAGE TRANSPORT SERVICE PUBLIC SLOTS
 
 
-void MessageTransportService::sendHttpNotify(){
+void MessageTransportService::writeHttpNotify(){
 
     QByteArray data;
     QXmlStreamWriter *writer = new QXmlStreamWriter(&data);
@@ -666,7 +666,7 @@ Platform::Platform(QObject *parent)
 
     //MTS CONNECTIONS
     connect(&m_mts, SIGNAL(messageReady(QStringList,QByteArray)), this, SLOT(handleAgentMessage(QStringList,QByteArray)));
-    sendHttpStatusMessage("hello");
+    writeHttpStatusMessage("hello");
 }
 
 void Platform::handleStatusMessage(MessageType type, QString address, bool ds){
@@ -674,9 +674,9 @@ void Platform::handleStatusMessage(MessageType type, QString address, bool ds){
         if (!m_gatewayAgents.contains(address) && !ds)
             m_gatewayAgents << address;
 		if (ds)
-			m_ds->sendNotify();
+            m_ds.sendMulticastNotifyPacket();
 		else
-			sendHttpNotify(); //upravit
+            m_mts.writeHttpNotify();
     } else if (type == MessageType::Bye && !ds){
         if (m_gatewayAgents.contains(address))
             m_gatewayAgents.removeAll(address);

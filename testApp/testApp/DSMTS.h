@@ -61,7 +61,7 @@ private:
     QHostAddress m_groupAddress; //odstran a uprav v kode
     void handleDatagram(QByteArray data); 
     void writeStatusMessage(QString type);
-	void writeStatusMessage()
+    void writeStatusMessage();
 public:
     DiscoveryService(Platform *platform);
     ~DiscoveryService();
@@ -90,13 +90,13 @@ private:
 public:
     MessageTransportService(Platform *platform);
     ~MessageTransportService();
-    void sendHttpMessage(const QHash<QString, QString> recipients, const QString sender, QByteArray msg, MessageType type);
-    void sendHttpStatusMessage(QString type);
+    void writeHttpMessage(const QHash<QString, QString> recipients, const QString sender, QByteArray msg, MessageType type);
+    void writeHttpStatusMessage(QString type);
 
 private slots:
     void handleRequest(Tufao::HttpServerRequest &request,
                        Tufao::HttpServerResponse &response);
-    void processHttpMessage();
+    void processHttpMessage(Tufao::HttpServerRequest request, Tufao::HttpServerResponse response);
 public slots:
     void writeHttpNotify();
 
@@ -123,7 +123,7 @@ public:
     QHash<QString, AgentInfo> m_forwardedAgents;
     QStringList m_gatewayAgents;
 
-    void handleStatusMessage(QString type, QString address);
+    void handleStatusMessage(MessageType type, QString address, bool ds);
 
 private slots:
     void handleAgentMessage(QStringList recipients, QByteArray msg);

@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     props.metric = 5;
     props.validUntil = QTime::currentTime().addSecs(30);
     props.sourceDs = &platform.m_ds;
-    props.route << "http://127.0.0.1:22222" << "http://128.0.0.1:22452";
+    props.origins << "http://127.0.0.1:22222" << "http://128.0.0.1:22452";
 
     ahoj.desription.name = "magda";
     ahoj.desription.flags << "GW" << "ano" << "ano";
