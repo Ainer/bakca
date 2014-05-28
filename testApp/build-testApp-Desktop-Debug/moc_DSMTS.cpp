@@ -19,8 +19,8 @@
 
 QT_BEGIN_MOC_NAMESPACE
 struct qt_meta_stringdata_DiscoveryService_t {
-    QByteArrayData data[6];
-    char stringdata[117];
+    QByteArrayData data[4];
+    char stringdata[69];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -30,16 +30,12 @@ struct qt_meta_stringdata_DiscoveryService_t {
 static const qt_meta_stringdata_DiscoveryService_t qt_meta_stringdata_DiscoveryService = {
     {
 QT_MOC_LITERAL(0, 0, 16),
-QT_MOC_LITERAL(1, 17, 22),
-QT_MOC_LITERAL(2, 40, 0),
-QT_MOC_LITERAL(3, 41, 24),
-QT_MOC_LITERAL(4, 66, 23),
-QT_MOC_LITERAL(5, 90, 25)
+QT_MOC_LITERAL(1, 17, 23),
+QT_MOC_LITERAL(2, 41, 0),
+QT_MOC_LITERAL(3, 42, 25)
     },
-    "DiscoveryService\0forwardedAgentsUpdated\0"
-    "\0QHash<QString,AgentInfo>\0"
-    "processPendingDatagrams\0"
-    "sendMulticastNotifyPacket\0"
+    "DiscoveryService\0processPendingDatagrams\0"
+    "\0sendMulticastNotifyPacket\0"
 };
 #undef QT_MOC_LITERAL
 
@@ -49,22 +45,16 @@ static const uint qt_meta_data_DiscoveryService[] = {
        7,       // revision
        0,       // classname
        0,    0, // classinfo
-       3,   14, // methods
+       2,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
-       1,       // signalCount
-
- // signals: name, argc, parameters, tag, flags
-       1,    1,   29,    2, 0x06,
+       0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       4,    0,   32,    2, 0x08,
-       5,    0,   33,    2, 0x0a,
-
- // signals: parameters
-    QMetaType::Void, 0x80000000 | 3,    2,
+       1,    0,   24,    2, 0x08,
+       3,    0,   25,    2, 0x0a,
 
  // slots: parameters
     QMetaType::Void,
@@ -78,21 +68,12 @@ void DiscoveryService::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int
     if (_c == QMetaObject::InvokeMetaMethod) {
         DiscoveryService *_t = static_cast<DiscoveryService *>(_o);
         switch (_id) {
-        case 0: _t->forwardedAgentsUpdated((*reinterpret_cast< QHash<QString,AgentInfo>(*)>(_a[1]))); break;
-        case 1: _t->processPendingDatagrams(); break;
-        case 2: _t->sendMulticastNotifyPacket(); break;
+        case 0: _t->processPendingDatagrams(); break;
+        case 1: _t->sendMulticastNotifyPacket(); break;
         default: ;
         }
-    } else if (_c == QMetaObject::IndexOfMethod) {
-        int *result = reinterpret_cast<int *>(_a[0]);
-        void **func = reinterpret_cast<void **>(_a[1]);
-        {
-            typedef void (DiscoveryService::*_t)(QHash<QString,AgentInfo> );
-            if (*reinterpret_cast<_t *>(func) == static_cast<_t>(&DiscoveryService::forwardedAgentsUpdated)) {
-                *result = 0;
-            }
-        }
     }
+    Q_UNUSED(_a);
 }
 
 const QMetaObject DiscoveryService::staticMetaObject = {
@@ -120,26 +101,19 @@ int DiscoveryService::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 3)
+        if (_id < 2)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 3;
+        _id -= 2;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 3)
+        if (_id < 2)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 3;
+        _id -= 2;
     }
     return _id;
 }
-
-// SIGNAL 0
-void DiscoveryService::forwardedAgentsUpdated(QHash<QString,AgentInfo> _t1)
-{
-    void *_a[] = { 0, const_cast<void*>(reinterpret_cast<const void*>(&_t1)) };
-    QMetaObject::activate(this, &staticMetaObject, 0, _a);
-}
 struct qt_meta_stringdata_MessageTransportService_t {
-    QByteArrayData data[11];
-    char stringdata[177];
+    QByteArrayData data[13];
+    char stringdata[228];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -158,13 +132,16 @@ QT_MOC_LITERAL(6, 97, 7),
 QT_MOC_LITERAL(7, 105, 26),
 QT_MOC_LITERAL(8, 132, 8),
 QT_MOC_LITERAL(9, 141, 18),
-QT_MOC_LITERAL(10, 160, 15)
+QT_MOC_LITERAL(10, 160, 24),
+QT_MOC_LITERAL(11, 185, 25),
+QT_MOC_LITERAL(12, 211, 15)
     },
     "MessageTransportService\0messageReady\0"
     "\0notifyMessageReady\0handleRequest\0"
     "Tufao::HttpServerRequest&\0request\0"
     "Tufao::HttpServerResponse&\0response\0"
-    "processHttpMessage\0writeHttpNotify\0"
+    "processHttpMessage\0Tufao::HttpServerRequest\0"
+    "Tufao::HttpServerResponse\0writeHttpNotify\0"
 };
 #undef QT_MOC_LITERAL
 
@@ -187,8 +164,8 @@ static const uint qt_meta_data_MessageTransportService[] = {
 
  // slots: name, argc, parameters, tag, flags
        4,    2,   47,    2, 0x08,
-       9,    0,   52,    2, 0x08,
-      10,    0,   53,    2, 0x0a,
+       9,    2,   52,    2, 0x08,
+      12,    0,   57,    2, 0x0a,
 
  // signals: parameters
     QMetaType::Void, QMetaType::QStringList, QMetaType::QByteArray,    2,    2,
@@ -196,7 +173,7 @@ static const uint qt_meta_data_MessageTransportService[] = {
 
  // slots: parameters
     QMetaType::Void, 0x80000000 | 5, 0x80000000 | 7,    6,    8,
-    QMetaType::Void,
+    QMetaType::Void, 0x80000000 | 10, 0x80000000 | 11,    6,    8,
     QMetaType::Void,
 
        0        // eod
@@ -210,7 +187,7 @@ void MessageTransportService::qt_static_metacall(QObject *_o, QMetaObject::Call 
         case 0: _t->messageReady((*reinterpret_cast< QStringList(*)>(_a[1])),(*reinterpret_cast< QByteArray(*)>(_a[2]))); break;
         case 1: _t->notifyMessageReady((*reinterpret_cast< QByteArray(*)>(_a[1]))); break;
         case 2: _t->handleRequest((*reinterpret_cast< Tufao::HttpServerRequest(*)>(_a[1])),(*reinterpret_cast< Tufao::HttpServerResponse(*)>(_a[2]))); break;
-        case 3: _t->processHttpMessage(); break;
+        case 3: _t->processHttpMessage((*reinterpret_cast< Tufao::HttpServerRequest(*)>(_a[1])),(*reinterpret_cast< Tufao::HttpServerResponse(*)>(_a[2]))); break;
         case 4: _t->writeHttpNotify(); break;
         default: ;
         }

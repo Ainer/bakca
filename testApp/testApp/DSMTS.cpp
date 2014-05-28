@@ -493,9 +493,7 @@ void MessageTransportService::handleRequest(Tufao::HttpServerRequest &request, T
     //TODO PROCESS MSG
     m_request = &request;
     m_response = &response;
-    connect(&request, &Tufao::HttpServerRequest::end, [=](Tufao::HttpServerRequest &req, Tufao::HttpServerResponse &resp) {
-		processHttpMessage(req, resp);
-    });
+
     qDebug() << "my address: " << request.socket().localAddress().toString();
     qDebug() << "peer address: " << request.socket().peerAddress().toString();
 
@@ -666,7 +664,7 @@ Platform::Platform(QObject *parent)
 
     //MTS CONNECTIONS
     connect(&m_mts, SIGNAL(messageReady(QStringList,QByteArray)), this, SLOT(handleAgentMessage(QStringList,QByteArray)));
-    writeHttpStatusMessage("hello");
+    m_mts.writeHttpStatusMessage("hello");
 }
 
 void Platform::handleStatusMessage(MessageType type, QString address, bool ds){
