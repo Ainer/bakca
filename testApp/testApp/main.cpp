@@ -20,16 +20,16 @@ int main(int argc, char *argv[])
 
     AgentInfo ahoj;
 
-    ahoj.desription.name = "filip";
+    /*ahoj.desription.name = "filip";
    // ahoj.desription.flags << "nie" << "ano" << "nie";
     ahoj.desription.services << "0" << "1" << "1";
 
     props.metric = 3;
-    props.validUntil = QTime::currentTime().addSecs(30);
+    props.validUntil = QTime::currentTime().addSecs(180);
     //props.sourceDs = &platform.ds;
     ahoj.transportAddresses["http://127.0.0.1:22222/filip"] = props;
-    props.sourceDs = nullptr;
-
+    props.sourceDs = nullptr;*/
+/*
 
     QHash<QString, AgentInfo> agents;
     QList<AgentInfo> toBeNotified;
@@ -38,32 +38,35 @@ int main(int argc, char *argv[])
     toBeNotified.append(ahoj);
     ahoj.transportAddresses.clear();
 
-    props.metric = 5;
-    props.validUntil = QTime::currentTime().addSecs(30);
+    props.metric = 1;
+    props.validUntil = QTime::currentTime().addSecs(180);
     props.sourceDs = &platform.m_ds;
     props.origins << "http://127.0.0.1:22222" << "http://128.0.0.1:22452";
 
     ahoj.desription.name = "magda";
     ahoj.desription.flags << "GW" << "ano" << "ano";
     ahoj.desription.services << "1" << "1" << "1";
-    ahoj.transportAddresses[QString("http://128.0.0.1:22452/magda")] = props;
+    ahoj.transportAddresses[QString("http://158.195.212.98:22222")] = props;
 
     agents.insert(ahoj.desription.name,ahoj);
     toBeNotified.append(ahoj);
+    //platform.m_gatewayAgents << "http://158.195.212.98:22222";
+
+    QHash<QString, QString> to;
+    to["magda"] = "http://109.230.49.193:22222";
+
+    platform.m_mts.writeHttpMessage(to, "misko", "Toto je sprava", MessageType::StandardMessage);
 
 
+/*
     platform.m_platformAgents = agents;
-
-    platform.m_ds.sendMulticastNotifyPacket();
-
-
 
     hash.insert("milos", "http://ahoj.net");
     hash.insert("roman", "http://127.0.0.1:22222");
     hash.insert("jaroslav", "http://127.0.0.1:22222");
     hash.insert("filip", "http://127.0.0.1:22222");
 
-    platform.m_gatewayAgents << "http://127.0.0.1:22222" << "http://158.195.212.98:22222";
+
     platform.m_ds.saveGWtoFile();
     //platform.mts.writeHttpMessage(hash, "Adko", "Toto je message");
 
@@ -91,9 +94,7 @@ int main(int argc, char *argv[])
     ahoj.transportAddresses[QString("http://nie.sk")] = props;
     agents.insert(ahoj.desription.name, ahoj);
 
-    platform.m_forwardedAgents = agents;
+    platform.m_forwardedAgents = agents;*/
 
-    platform.m_mts.writeHttpNotify();
-    platform.m_ds.sendMulticastNotifyPacket();
     return a.exec();
 }

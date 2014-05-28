@@ -140,7 +140,7 @@ bool DiscoveryService::saveGWtoFile(){
     }
 
     QJsonDocument saveDoc(QJsonArray::fromStringList(m_platform->m_gatewayAgents));
-    qDebug() << saveDoc.toJson();
+    //qDebug() << saveDoc.toJson();
     saveFile.write(saveDoc.toJson());
     return true;
 }
@@ -161,7 +161,7 @@ bool DiscoveryService::loadGWfromFile(){
             m_platform->m_gatewayAgents.append(loadDoc.array()[i].toString());
     }
 
-    qDebug() << m_platform->m_gatewayAgents;
+    //qDebug() << m_platform->m_gatewayAgents;
     return true;
 }
 
@@ -175,7 +175,7 @@ bool DiscoveryService::parseNotifyPacket(QVariantMap msg) // TODO CHANGE TO LIST
     while(it != message.constEnd()){
         if (it.key() == "gwAgents"){
             foreach(QVariant agent, it.value().toList()){
-                if (!m_platform->m_gatewayAgents.contains(agent.toString())){
+                if (!m_platform->m_gatewayAgents.contains(agent.toString()) && agent.toString() != MY_ADDRESS){
                     m_platform->m_gatewayAgents.append(agent.toString());
                 }
             }
@@ -338,7 +338,7 @@ void MessageTransportService::processXmlNotify(QByteArray data, QString sender){
             }else if(tagNam == TRANSPORT_ADDRESSES) {
                 QDomNodeList taNodeList = peData.toElement().childNodes();
                 for (int i = 0; i < taNodeList.length(); ++i){
-                    qDebug() << "route" << i;
+                    //qDebug() << "route" << i;
                     QDomNode metricNode = taNodeList.item(i).toElement().firstChild();
                     QDomNode validUntilNode = metricNode.nextSibling();
                     QDomNode addressNode = validUntilNode.nextSibling();
@@ -451,7 +451,9 @@ void MessageTransportService::writeHttpMessage(const QHash<QString, QString> rec
         if (type == MessageType::StandardMessage){
             foreach(QString key, keysToRemove)
                 rec.remove(key);
+            qDebug() << "preposielam na" << currentURL;
             keysToRemove.clear();
+
             sendHttp(data, currentURL);
         } else {
             foreach(QString address, recipients.values())
@@ -478,7 +480,7 @@ void MessageTransportService::writeHttpStatusMessage(QString type){
     foreach(QString gw, m_platform->m_gatewayAgents){
         recipients.insert(gw, gw);
     }
-    qDebug() << data;
+    //qDebug() << data;
 
     writeHttpMessage(recipients, MY_ADDRESS, data, MessageType::Hello);
 }
@@ -492,9 +494,6 @@ MessageTransportService::~MessageTransportService(){
 void MessageTransportService::handleRequest(Tufao::HttpServerRequest &request, Tufao::HttpServerResponse &response){
     //TODO PROCESS MSG
 
-    qDebug() << "my address: " << request.socket().localAddress().toString();
-    qDebug() << "peer address: " << request.socket().peerAddress().toString();
-
     connect(&request, &Tufao::HttpServerRequest::end,
     this, [this,&request, &response]() {
     processHttpMessage(request, response);
@@ -503,7 +502,7 @@ void MessageTransportService::handleRequest(Tufao::HttpServerRequest &request, T
 
 void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest &request, Tufao::HttpServerResponse &response){
     QByteArray data = request.readBody();
-    qDebug() << data;
+
     QDomDocument doc;
     QStringList myAgents;
     QStringList forwardAgents;
@@ -515,6 +514,7 @@ void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest &reque
     QDomElement element = doc.documentElement();
     QDomNode node = element.namedItem("messageType");
     type =  (MessageType)MESSAGE_TYPE_STRINGS.indexOf(node.toElement().text());
+    qDebug() << node.toElement().text();
 
     QByteArray msg;
     node = element.namedItem("message");
@@ -524,6 +524,7 @@ void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest &reque
 
     node = element.namedItem("sender");
     sender = node.toElement().text();
+    qDebug() << sender;
 
     // if notify, don't forward
     if (type == MessageType::Notify){
@@ -543,6 +544,8 @@ void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest &reque
 		return;
 	}
 
+    qDebug() << "Prisiel message" << data;
+
 
     node = element.namedItem("recipients");
     if (!node.isNull()){
@@ -555,10 +558,6 @@ void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest &reque
             }
         }
     }
-
-    qDebug() << "My agents: " << myAgents;
-    qDebug() << "Remote agents: " << forwardAgents;
-
 
     QHash<QString, QString> recipients;
     foreach(QString agent, forwardAgents){
@@ -577,12 +576,13 @@ void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest &reque
         url = "";
         minMetric = 999;
     }
+    qDebug() << "preposielam" << sender << msg;
     writeHttpMessage(recipients, sender, msg, type);
     response.writeHead(Tufao::HttpResponseStatus::OK);//presun na spravne miesto po spracovani message
     response.headers().replace("Content-Type", "text/plain");
     response.end(":)");
 
-    if (type == MessageType::StandardMessage)
+    if (type == MessageType::StandardMessage && !myAgents.empty())
         emit messageReady(myAgents, msg);
 
 }
@@ -634,7 +634,7 @@ void MessageTransportService::writeHttpNotify(){
         }
         writer->writeEndElement(); //notifyInfo
         writer->writeEndDocument();
-        qDebug() << data;
+        //qDebug() << data;
         QHash<QString, QString> recipient;
         recipient.insert(gw, gw);
         writeHttpMessage(recipient  //GW agents
@@ -722,8 +722,8 @@ void Platform::eraseInvalidTransportAddresses(){
                 ++it2;
             }
         }
-        if (it.value().transportAddresses.empty()){
-            m_forwardedAgents.erase(it);
+        if (it.value().transportAddresses.empty() ){
+            m_forwardedAgents.remove(it.key());
         } else {
             ++it;
         }
