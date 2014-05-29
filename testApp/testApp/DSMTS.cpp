@@ -663,7 +663,7 @@ Platform::Platform(QObject *parent)
     , m_ds(this)
 {
     loadGWfromFile();
-    m_knownGWAgents << "http://158.195.214.48:22222";
+    m_knownGWAgents << "http://158.195.212.98:22222";
     m_validationTimer = new QTimer(this);
     m_validationTimer->setInterval(5000);
     m_validationTimer->setSingleShot(false);
