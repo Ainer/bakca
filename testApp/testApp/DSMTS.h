@@ -66,8 +66,6 @@ public:
     DiscoveryService(Platform *platform);
     ~DiscoveryService();
     bool parseNotifyPacket(QVariantMap msg);
-    bool saveGWtoFile();
-	bool loadGWfromFile();
 private slots:
     void processPendingDatagrams();
 public slots:
@@ -114,14 +112,18 @@ private:
     QTimer *m_validationTimer;
     QTimer *m_localNetworkNotificationTimer;
     QTimer *m_forwardedAgentsNotificationTimer;
+    bool saveGWtoFile();
+    bool loadGWfromFile();
 public:
     bool m_gateway = true;
     MessageTransportService m_mts;
     DiscoveryService m_ds;
     Platform(QObject *parent = 0);
+    ~Platform();
     QHash<QString, AgentInfo> m_platformAgents;
     QHash<QString, AgentInfo> m_forwardedAgents;
     QStringList m_gatewayAgents;
+    QStringList m_knownGWAgents;
 
     void handleStatusMessage(MessageType type, QString address, bool ds);
 

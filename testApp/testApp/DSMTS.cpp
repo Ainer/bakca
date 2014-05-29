@@ -94,9 +94,9 @@ void DiscoveryService::handleDatagram(QByteArray data){
     if (message["type"].toString() == MESSAGE_TYPE_STRINGS[MessageType::Notify])
         parseNotifyPacket(message);
     else if (message["type"].toString() == MESSAGE_TYPE_STRINGS[MessageType::Hello])
-		m_platform->handleStatusMessage(MessageType::Hello, message["address"].toString(), true);
+        m_platform->handleStatusMessage(MessageType::Hello, message["address"].toString(), true);
     else if (message["type"].toString() == MESSAGE_TYPE_STRINGS[MessageType::Bye])
-		m_platform->handleStatusMessage(MessageType::Bye, message["address"].toString(), true);
+        m_platform->handleStatusMessage(MessageType::Bye, message["address"].toString(), true);
     return;
 }
 
@@ -124,45 +124,11 @@ DiscoveryService::DiscoveryService(Platform *platform)
 
     connect(m_udpSocket, SIGNAL(readyRead()),
             this, SLOT(processPendingDatagrams()));
-    writeStatusMessage("hello");
+    writeStatusMessage(MESSAGE_TYPE_STRINGS[MessageType::Hello]);
     //sendMulticastNotifyPacket();
 }
 DiscoveryService::~DiscoveryService(){
-    writeStatusMessage("bye");
-}
-
-bool DiscoveryService::saveGWtoFile(){
-    QFile saveFile(QStringLiteral("GWAgents.json"));
-
-    if (!saveFile.open(QIODevice::WriteOnly)) {
-        qWarning("Couldn't open save file.");
-        return false;
-    }
-
-    QJsonDocument saveDoc(QJsonArray::fromStringList(m_platform->m_gatewayAgents));
-    //qDebug() << saveDoc.toJson();
-    saveFile.write(saveDoc.toJson());
-    return true;
-}
-
-bool DiscoveryService::loadGWfromFile(){
-    QFile loadFile(QStringLiteral("GWAgents.json"));
-
-    if (!loadFile.open(QIODevice::ReadOnly)) {
-        qWarning("Couldn't open save file.");
-        return false;
-    }
-
-    QByteArray saveData = loadFile.readAll();
-
-    QJsonDocument loadDoc(QJsonDocument::fromJson(saveData));
-    for (int i = 0; i < loadDoc.array().count(); ++i){
-        if (!m_platform->m_gatewayAgents.contains(loadDoc.array()[i].toString()))
-            m_platform->m_gatewayAgents.append(loadDoc.array()[i].toString());
-    }
-
-    //qDebug() << m_platform->m_gatewayAgents;
-    return true;
+    writeStatusMessage(MESSAGE_TYPE_STRINGS[MessageType::Bye]);
 }
 
 bool DiscoveryService::parseNotifyPacket(QVariantMap msg) // TODO CHANGE TO LIST
@@ -358,7 +324,6 @@ void MessageTransportService::processXmlNotify(QByteArray data, QString sender){
         }
         //find existence
 
-		//skontroluj, ci neexistuje s metrikou 0, v takom pripade neukladaj
         foreach(TransportAddressProperties props, agents[info.desription.name].transportAddresses.values())
             if (props.metric == 0)
                 isLocal = true;
@@ -477,16 +442,26 @@ void MessageTransportService::writeHttpStatusMessage(QString type){
     writer->writeEndDocument();
 
     QHash<QString, QString> recipients;
-    foreach(QString gw, m_platform->m_gatewayAgents){
-        recipients.insert(gw, gw);
-    }
+    if (type == MESSAGE_TYPE_STRINGS[MessageType::Hello])
+        foreach(QString gw, m_platform->m_knownGWAgents){ //sed hello to every known GW agent
+            if (gw != MY_ADDRESS)
+                recipients.insert(gw, gw);
+        }
+    else
+        foreach(QString gw, m_platform->m_gatewayAgents){ //send bye to every active GW agent
+            if (gw != MY_ADDRESS)
+                recipients.insert(gw, gw);
+        }
     //qDebug() << data;
-
-    writeHttpMessage(recipients, MY_ADDRESS, data, MessageType::Hello);
+    if (!recipients.empty())
+        if (type == MESSAGE_TYPE_STRINGS[MessageType::Hello])
+            writeHttpMessage(recipients, MY_ADDRESS, data, MessageType::Hello);
+        else if (type == MESSAGE_TYPE_STRINGS[MessageType::Bye])
+            writeHttpMessage(recipients, MY_ADDRESS, data, MessageType::Bye);
 }
 
 MessageTransportService::~MessageTransportService(){
-    writeHttpStatusMessage("bye");
+    writeHttpStatusMessage(MESSAGE_TYPE_STRINGS[MessageType::Bye]);
 }
 
 //MESSAGE TRANSPORT SERVICE PRIVATE SLOTS
@@ -495,8 +470,8 @@ void MessageTransportService::handleRequest(Tufao::HttpServerRequest &request, T
     //TODO PROCESS MSG
 
     connect(&request, &Tufao::HttpServerRequest::end,
-    this, [this,&request, &response]() {
-    processHttpMessage(request, response);
+            this, [this,&request, &response]() {
+        processHttpMessage(request, response);
     });
 }
 
@@ -530,19 +505,20 @@ void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest &reque
     if (type == MessageType::Notify){
         if (!m_platform->m_gatewayAgents.contains(sender))
             m_platform->m_gatewayAgents.append(sender);
+        response.writeHead(Tufao::HttpResponseStatus::OK);//presun na spravne miesto po spracovani message
+        response.headers().replace("Content-Type", "text/plain");
+        response.end(":)");
         processXmlNotify(msg, sender);
-        response.writeHead(Tufao::HttpResponseStatus::OK);//presun na spravne miesto po spracovani message
-        response.headers().replace("Content-Type", "text/plain");
-        response.end(":)");
+
         return;
-	}
-	else if (type == MessageType::Hello || type == MessageType::Bye){
-		m_platform->handleStatusMessage(type, sender, false);
+    }
+    else if (type == MessageType::Hello || type == MessageType::Bye){
         response.writeHead(Tufao::HttpResponseStatus::OK);//presun na spravne miesto po spracovani message
         response.headers().replace("Content-Type", "text/plain");
         response.end(":)");
-		return;
-	}
+        m_platform->handleStatusMessage(type, sender, false);
+        return;
+    }
 
     qDebug() << "Prisiel message" << data;
 
@@ -553,7 +529,7 @@ void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest &reque
         for (int i = nodeList.length()-1; i >= 0; --i){
             if (m_platform->m_platformAgents.contains(nodeList.item(i).toElement().text())){
                 myAgents << nodeList.item(i).toElement().text();
-            } else {
+            } else if (m_platform->m_forwardedAgents.contains(nodeList.item(i).toElement().text())){
                 forwardAgents << nodeList.item(i).toElement().text();
             }
         }
@@ -577,10 +553,11 @@ void MessageTransportService::processHttpMessage(Tufao::HttpServerRequest &reque
         minMetric = 999;
     }
     qDebug() << "preposielam" << sender << msg;
-    writeHttpMessage(recipients, sender, msg, type);
     response.writeHead(Tufao::HttpResponseStatus::OK);//presun na spravne miesto po spracovani message
     response.headers().replace("Content-Type", "text/plain");
     response.end(":)");
+    writeHttpMessage(recipients, sender, msg, type);
+
 
     if (type == MessageType::StandardMessage && !myAgents.empty())
         emit messageReady(myAgents, msg);
@@ -598,11 +575,12 @@ void MessageTransportService::writeHttpNotify(){
 
     QHash<QString, QString> recipients;
     foreach(QString address, m_platform->m_gatewayAgents)
-        recipients[address] = address;
+        if (address != MY_ADDRESS)
+            recipients[address] = address;
 
     qDebug() << "PISEM SPRAVU";
 
-    if (m_platform->m_platformAgents.empty() && m_platform->m_forwardedAgents.empty() && m_platform->m_gatewayAgents.empty())
+    if ((m_platform->m_platformAgents.empty() && m_platform->m_forwardedAgents.empty()) || m_platform->m_gatewayAgents.empty())
         //if all agents empty, no need to notify Notify when only gw not empty?
         return;
 
@@ -642,13 +620,50 @@ void MessageTransportService::writeHttpNotify(){
     }
 }
 // ///////////////////////////////////////////////////////// Platform /////////////////////////////////////////////////////////
+//Platform PRIVATE
+
+bool Platform::saveGWtoFile(){
+    QFile saveFile(QStringLiteral("GWAgents.json"));
+
+    if (!saveFile.open(QIODevice::WriteOnly)) {
+        qWarning("Couldn't open save file.");
+        return false;
+    }
+
+    QJsonDocument saveDoc(QJsonArray::fromStringList(m_knownGWAgents));
+    //qDebug() << saveDoc.toJson();
+    saveFile.write(saveDoc.toJson());
+    return true;
+}
+
+bool Platform::loadGWfromFile(){
+    QFile loadFile(QStringLiteral("GWAgents.json"));
+
+    if (!loadFile.open(QIODevice::ReadOnly)) {
+        qWarning("Couldn't open save file.");
+        return false;
+    }
+
+    QByteArray saveData = loadFile.readAll();
+
+    QJsonDocument loadDoc(QJsonDocument::fromJson(saveData));
+    for (int i = 0; i < loadDoc.array().count(); ++i){
+        if (!m_knownGWAgents.contains(loadDoc.array()[i].toString()))
+            m_knownGWAgents.append(loadDoc.array()[i].toString());
+    }
+
+    //qDebug() << m_platform->m_gatewayAgents;
+    return true;
+}
+
 //Platform PUBLIC
 Platform::Platform(QObject *parent)
     : QObject(parent)
     , m_mts(this)
     , m_ds(this)
 {
-    m_ds.loadGWfromFile();
+    loadGWfromFile();
+    m_knownGWAgents << "http://158.195.214.48:22222";
     m_validationTimer = new QTimer(this);
     m_validationTimer->setInterval(5000);
     m_validationTimer->setSingleShot(false);
@@ -672,16 +687,22 @@ Platform::Platform(QObject *parent)
 
     //MTS CONNECTIONS
     connect(&m_mts, SIGNAL(messageReady(QStringList,QByteArray)), this, SLOT(handleAgentMessage(QStringList,QByteArray)));
-    m_mts.writeHttpStatusMessage("hello");
+    m_mts.writeHttpStatusMessage(MESSAGE_TYPE_STRINGS[MessageType::Hello]);
+}
+
+Platform::~Platform(){
+    saveGWtoFile();
 }
 
 void Platform::handleStatusMessage(MessageType type, QString address, bool ds){
     if (type == MessageType::Hello){
         if (!m_gatewayAgents.contains(address) && !ds)
             m_gatewayAgents << address;
-		if (ds)
+        if (!m_knownGWAgents.contains(address) && !ds)
+            m_knownGWAgents << address;
+        if (ds)
             m_ds.sendMulticastNotifyPacket();
-		else
+        else
             m_mts.writeHttpNotify();
     } else if (type == MessageType::Bye && !ds){
         if (m_gatewayAgents.contains(address))
